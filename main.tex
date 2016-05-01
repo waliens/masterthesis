@@ -1,0 +1,104 @@
+\documentclass[a4paper,11pt]{report}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{mathrsfs}
+\usepackage[nottoc]{tocbibind}
+\usepackage[backend=biber,style=alphabetic]{biblatex}
+\usepackage{graphicx}
+\usepackage[left=3cm, right=3cm, top=3cm, bottom=3cm]{geometry}
+
+%% To uncomment if needed
+%\usepackage{array}
+%\usepackage[usenames,dvipsnames]{color}
+%\usepackage{listings}
+%\usepackage{arydshln}
+%\usepackage{slashbox}
+%\usepackage{subfigure}
+%\usepackage{pdflscape}
+%\usepackage{multirow}
+%\usepackage{cancel}
+%\usepackage[bookmarks = false,hidelinks]{hyperref}
+%\usepackage{enumitem}
+%\setlist[itemize,1]{label=$\bullet$}
+
+%% Add bibliography database
+\addbibresource{bibliography.bib}
+
+%% Set document data
+\author{Mormont Romain}
+\title{A workflow for computer-aided cytology and its applications}
+\date{Academic year 2015-2016}
+
+\begin{document}
+	
+	% Start frontpage =========================
+	\input{frontpage.tex}
+	% End frontpage ===========================
+	
+	\newpage
+	
+	% Start table of content ==================
+	\tableofcontents
+	% End table of content ====================
+	
+	\newpage
+
+	% Start summary ===========================
+	\chapter*{Summary}
+	\input{summary.tex}
+	\newpage
+	% End summary =============================
+	
+	% Start acknowledgement ===================
+	\chapter*{Acknowledgement}
+	\input{acknowledgement.tex}
+	\newpage
+	% End acknowledgement =====================
+	
+	% Start introduction ======================
+	\setcounter{page}{1}
+	\chapter{Introduction}
+	\input{introduction.tex}
+	\newpage
+	% End introduction ========================
+	
+	% Start chapter 1 : obj. detection ========
+	\chapter{Object detection in large images}
+	\input{detection.tex}
+	\newpage
+	% End chapter 1 : obj. detection ==========	
+	
+	% Start chapter 2 : generic workflow ======
+	\chapter{A generic workflow : Segment Locate Dispatch Classify}
+	\input{workflow.tex}
+	\newpage
+	% End chapter 2 : generic workflow ========
+	
+	% Start chapter 3 : thyroid case ==========
+	\chapter{SLDC at work : the thyroid case}
+	\input{thyroid.tex}
+	\newpage
+	% End chapter 3 : thyroid case ============
+	
+	% Start conclusion ========================
+	\chapter{Conclusion}
+	\input{conclusion.tex}
+	% End conclusion ==========================
+
+	
+	\appendix
+	% Start list of tables ====================
+	\listoftables
+	% End list of tables ======================
+	
+	% Start list of figures ===================
+	\listoffigures
+	% End list of figures =====================
+	
+	% Start bibliography ======================
+	\printbibliography[heading=bibintoc]
+	% End bibliography ========================
+\end{document}
