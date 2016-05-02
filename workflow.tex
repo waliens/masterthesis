@@ -1,8 +1,45 @@
 \section{Principle}
+\subsection{History and first developments}
+The Segment-Locate-Dispatch-Classify (SLDC) workflow was first imagined by ?? Jean-Michel Begon ?? as a generalization of the work on thyroid nodule malignancy detection made in \cite{adeblire2013}. In the context of this master thesis, the author had implemented a processing workflow for detecting cells with inclusion and proliferative patterns (see ?? (thyroid)) in digitized thyroid punctions slides. The cells and patterns were detected by segmenting the images and then classified using machine learning techniques. As explained in the Section ?? (thyroid), the patterns could themselves contain cells with inclusion, so the author implemented a second processing workflow to detect those cells in the patterns. The idea behind the second workflow was similar to the first, that is segmenting the patterns and then classifying the detected objects. 
+
+From those workflows, a common pattern emerged : performing detection using a segmentation algorithm and then classifying the detected objects using machine learning techniques. This pattern was at the root of the SLDC workflow idea. 
+
+\subsection{Scope}
+The idea was to implement a ?? plug-and-play meta-algorithm ?? based on this that a developer could customize to solve any object detection and classification problem.  
+
 \subsection{Algorithm}
-Describe the steps of algorithm  
+The workflow is an object detection and classification algorithm. Therefore, it takes as input an image and outputs a set of objects of interest found in this image. Especially, the algorithm is expected to return information about the shape and location of those objects. In addition to those information, a classification label is computed using a classifier and associated with every object. Due to the possible variability of the elements to detect in the images, the workflow can use different classifiers to predict the target label. Therefore, before being classified, an object is first dispatched to one of these classifiers. 
+
+\subsubsection{Formalization}
+As suggested by its name, the workflow is composed of four steps. 
+
+\paragraph{Segment} The first step consists in finding objects of interest in the input image, that is, finding grouping of pixels composing those objects. This step can be formulated as a segmentation problem where each pixel is associated a binary value indicating whether it belongs or not to an object of interest. Given the input image $\mathcal{I}$, this step therefore produces a binary image $\mathcal{B}$ of which the pixel $b_{ij}$ is set to 1 if the pixel $p_{ij}$ of $\mathcal{I}$ is located in an object of interest. Otherwise, $b_{ij}$ is set to 0. Formally, we have a segmentation operator $\mathcal{S}(\cdot)$ : 
+
+\[
+	\mathcal{S}(\cdot) : \mathcal{I} \rightarrow \mathcal{B}
+\]
+
+\paragraph{Locate} The second step consists in extracting the information about the shape and location of the objects of interest from the binary image $\mathcal{B}$ and to convert this information into a convenient format such as a polygon (see Section \ref{sssec:choice_polygon} for more details about this representation). Given the binary image $\mathcal{B}$ and given that it contains $K$ distinct regions of interest, this step produces $K$ polygons where the polygon $P_i$ represents the geometric contour of the $i^{th}$ object of interest. Formally, we have a location operator $\mathcal{L}(\cdot)$ : 
+
+\[
+	\mathcal{L}(\cdot) : \mathcal{B} \rightarrow \left\{P_i | i \in \{1,...,K\}\right\}
+\]
+
+\paragraph{Dispatch} At this step, the workflow must dispatch each polygon to its corresponding classifier. To achieve this goal, it uses a  the 
+
+\paragraph{Classify}
+ 
+
+\subsubsection{On encoding location and format using a polygon}
+\label{sssec:choice_polygon}
+
+\subsubsection{Chaining workflows}
+
 \subsection{Framework}
+
 Describe what we expect from a framework implementing the workflow (parallism, easy to use,...) 
+
+
 \section{Implementation}
 \subsection{Technologies}
 Describe and justify the choice of Python and of the various dependencies
