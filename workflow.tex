@@ -3,78 +3,101 @@
 \label{ssec:history_first_dev}
 The Segment-Locate-Dispatch-Classify (SLDC) workflow was first imagined by ?? Jean-Michel Begon ?? as a generalization of the work on thyroid nodule malignancy detection made in \cite{adeblire2013}. In the context of this master thesis, the author had implemented a processing workflow for detecting cells with inclusion and proliferative patterns (see ?? (thyroid)) in digitized thyroid punctions slides. The cells and patterns were detected by segmenting the images and then classified using machine learning techniques. As explained in the Section ?? (thyroid), the patterns could themselves contain cells with inclusion, so the author implemented a second processing workflow to detect those cells in the patterns. The idea behind the second workflow was similar to the first, that is segmenting the patterns and then classifying the detected objects. 
 
-From those workflows, a common pattern emerged : performing detection using a segmentation algorithm and then classifying the detected objects using machine learning techniques. This pattern was at the root of the SLDC workflow idea. 
+From those workflows, a common pattern emerged: performing detection using a segmentation algorithm and then classifying the detected objects using machine learning techniques. This pattern was at the root of the SLDC workflow idea. 
 
-\subsection{Algorithm : scope, terminology and notations}
-The workflow is a meta-algorithm\footnote{In this context, a meta-algorithm is an algorithm that coordinates the execution of other algorithms.} that detects and classifies objects contained in images. Particularly, given an image $\mathcal{I}$ as input, it is expected to output the information about the objects of interest in this image. It is worth noting that genericity is of the essence in this case. The algorithm should be usable for solving the widest possible range of object detection and classification problems while keeping minimal the work of the implementor.
+\subsection{Algorithm: scope, terminology and notations}
+The workflow is a meta-algorithm\footnote{In this context, a meta-algorithm is an algorithm that coordinates the execution of other algorithms.} that detects and classifies objects contained in images. Particularly, given an image $\mathcal{I}$ as input, it is expected to output the information about the objects of interest in this image. It is worth noting that genericity is of the essence, that is the algorithm should be able to solve the widest possible range of object detection and classification problems while keeping minimal the work of the implementor.
  
+\begin{definition}
 Formally, the algorithm can be seen as an operator $\mathcal{SLDC}(\cdot)$ such that
 
 \begin{equation}
 	\label{eqn:workflow_operator}
 	\mathcal{SLDC}(\cdot) : \mathcal{I} \rightarrow \left\{(o_1,C_1),...,(o_N, C_N)\right\}
 \end{equation}
+\end{definition}
 
 where $(o_i, C_i)$ is a tuple of which the first element, $o_i$, is the information about the $i^{th}$ object of interest found in $\mathcal{I}$ and the second, $C_i$, its classification label. 
 
 In the subsequent sections, some additional operators are defined and used to implement the $\mathcal{SLDC}(\cdot)$ operator. First, a basic version of the algorithm is presented and then refined in order to achieve an acceptable level of genericity. Finally, the final algorithm is presented. 
 
 \subsubsection{Additional operators}
+\label{sssec:other_operators}
 
-\paragraph{Segmentation} The segmentation is the step where the detection will actually be carried out. Formally, the goal of this phase is transform an image $\mathcal{I}$ into a binary mask $\mathcal{B}$ of which the pixel $b_{ij}$ is 1 if the pixel $p_{ij}$ of $\mathcal{I}$ located in an object of interest. Otherwise, it is set to 0. The segmentation operator $\mathcal{S}(\cdot)$ is such that
+\begin{definition} \textbf{Segmentation} The segmentation is the step where the detection will actually be carried out. Formally, the goal of this phase is transform an image $\mathcal{I}$ into a binary mask $\mathcal{B}$ of which the pixel $b_{ij}$ is 1 if the pixel $p_{ij}$ of $\mathcal{I}$ located in an object of interest. Otherwise, it is set to 0. The segmentation operator $\mathcal{S}(\cdot)$ is such that
 
 \begin{equation}
 	\label{eqn:operator_segment}
 	S(\cdot) : \mathcal{I} \rightarrow \mathcal{B}
 \end{equation}
+\end{definition}
 
-\paragraph{Classification} The classification is performed using a classification model which can be seen as an operator $T(\cdot)$ such that 
-
-\begin{equation}
-	T(\cdot) : o \rightarrow \mathcal{C}	
-\end{equation}
-
-where $o$ is an object and $C$ the corresponding classification label. 
-
-\paragraph{Location} While the segmented image theoretically contains all the information required about the detected objects (i.e. shape and position in the image), the format of this information is inconvenient to query mostly because a single object cannot be extracted easily. The goal of the location step is therefore to transform the information into more convenient format which encodes both the shape of the object and its position in the image. A mathematical object which matches this specification is a polygon and was chosen as representation. The location operator $\mathcal{L}(\cdot)$ can be seen as 
+\begin{definition} \textbf{Location} While the segmented image theoretically contains the necessary information about the detected objects (i.e. shape and position in the image), the format of this information is inconvenient to query mostly because a single object cannot be extracted easily. The goal of the location step is therefore to transform the information into a more convenient format which encodes both the shape of the object and its position in the image. It appears that polygons match this specification. Using this representation, the location operator $\mathcal{L}(\cdot)$ can be formally defined as 
 
 \begin{equation}
 	\mathcal{L}(\cdot) : \mathcal{B} \rightarrow \left\{P_1, ..., P_N\right\}
 \end{equation}
 
-where $\mathcal{B}$ is a binary image generated by a segmentation operator as defined in \ref{eqn:operator_segment}, $N$ is the number of object of interest in $\mathcal{B}$ and $P_i$ is the polygon generated for encoding the shape and position information of the $i^{th}$ object in the image.
+where $\mathcal{B}$ is a binary image generated by a segmentation operator as defined in Equation \ref{eqn:operator_segment}, $N$ is the number of object of interest in $\mathcal{B}$ and $P_i$ is the polygon representing the geometric contour of the $i^{th}$ object in the image.
+\end{definition}
 
+\begin{definition}\textbf{Classification} The classification is performed using a classification model, or \textit{classifier}. Such a model can be seen as an operator which produces a classification label given an object. Formally, the operator $\mathcal{T}(\cdot)$ is such that 
 
-\subsubsection{Single segmentation, single classification model}
+\begin{equation}
+	\mathcal{T}(\cdot) : o \rightarrow \mathcal{C}	
+\end{equation}
 
-The most basic way of implementing the $\mathcal{SLDC}$ operator is to 
+where $o$ is the object and $C$ the computed classification label. An extension of this operator is given a set of objects and produces labels for all of them. Formally, the operator $\mathcal{T}^*(\cdot)$ is such that 
 
-As suggested by the pattern introduced in Section , the workflow detects the objects using a segmentation algorithm and classifies the objects using a classification models. For the sake of genericity, those components, which are usually highly problem-dependent in image processing, are provided by the implementor and the workflow coordinates their execution to produce the desired output. That is why the workflow is called a \textit{meta-algorithm} as it actually coordinates other algorithms.
+\begin{equation}
+	\mathcal{T}^*(\cdot) : \left\{o_1, ..., o_N\right\}  \rightarrow \left\{C_1, ..., C_N\right\}
+\end{equation}
 
-As genericity is of the essence in this context, the 
+In this theory, there is no restriction about the nature or representation of the objects processed by the classifiers.
+\end{definition}
 
+\subsubsection{Single segmentation, single classifier}
+\label{sssec:single_single}
 
-The workflow is an object detection and classification algorithm. Therefore, it takes as input an image and outputs a set of objects of interest found in this image. Especially, the algorithm is expected to return information about the shape and location of those objects. In addition to those information, a classification label is computed using a classifier and associated with every object. Due to the possible variability of the elements to detect in the images, the workflow can use different classifiers to predict the target label. Therefore, before being classified, an object is first dispatched to one of these classifiers. 
+The most simple implementation of the $\mathcal{SLDC}$ operator would be the composition of the operator implemented in Section \ref{sssec:other_operators}. Particularly, the composition $\mathcal{S} \circ \mathcal{L}$ produces the polygons representing the objects and the composition $\mathcal{S} \circ \mathcal{L} \circ \mathcal{T}^*$ produces the labels. Formally: 
 
-\subsubsection{Formalization}
-As suggested by its name, the workflow is composed of four steps. 
+\begin{eqnarray}
+	\label{eqn:segment_locate_base} \mathcal{S} \circ \mathcal{L} : \mathcal{I} \rightarrow \left\{P_1, ..., P_N\right\} \\
+	\mathcal{S} \circ \mathcal{L} \circ \mathcal{T}^* : \mathcal{I} \rightarrow \left\{C_1, ..., C_N\right\}
+\end{eqnarray}
 
-\paragraph{Segment} The first step consists in finding objects of interest in the input image, that is, finding grouping of pixels composing those objects. This step can be formulated as a segmentation problem where each pixel is associated a binary value indicating whether it belongs or not to an object of interest. Given the input image $\mathcal{I}$, this step therefore produces a binary image $\mathcal{B}$ of which the pixel $b_{ij}$ is set to 1 if the pixel $p_{ij}$ of $\mathcal{I}$ is located in an object of interest. Otherwise, $b_{ij}$ is set to 0. Formally, we have a segmentation operator $\mathcal{S}(\cdot)$ : 
+Concretely, the definition of $\mathcal{S}$ and $\mathcal{T}^*$ would be left at the implementor's hands while $\mathcal{L}$ could be fixed by the workflow without loss of genericity. Such an algorithm could already solve any object detection and classification problem on image in which the labels can be predicted by a single classifier. However, in some cases, one classifier is not enough. This happen, for instance, when the image contains objects of very different nature and using several classifiers would yield better results than using a single one.
 
-\[
-	\mathcal{S}(\cdot) : \mathcal{I} \rightarrow \mathcal{B}
-\]
+\subsubsection{Single segmentation, several classifiers}
+\label{sssec:single_several}
 
-\paragraph{Locate} The second step consists in extracting the information about the shape and location of the objects of interest from the binary image $\mathcal{B}$ and to convert this information into a convenient format such as a polygon (see Section \ref{sssec:choice_polygon} for more details about this representation). Given the binary image $\mathcal{B}$ and given that it contains $K$ distinct regions of interest, this step produces $K$ polygons where the polygon $P_i$ represents the geometric contour of the $i^{th}$ object of interest. Formally, we have a location operator $\mathcal{L}(\cdot)$ : 
+To increase the level of genericity, the implementation of the $\mathcal{SLDC}$ operator should support the usage of several classifiers. This can be done by adding a new step to the algorithm which consists in dispatching the polygons (i.e. the objects) to their most adequate classifier. This step being problem dependent, it is the responsibility of the implementor to define how the polygons are dispatched. However, to reduce implementor's work, the way of defining the dispatching can be fixed and formalized.
 
-\[
-	\mathcal{L}(\cdot) : \mathcal{B} \rightarrow \left\{P_i | i \in \{1,...,K\}\right\}
-\]
+\paragraph{Dispatch} Given $M$ classifiers, the dispatching can be defined with $M$ (?? mutually exclusive ??) predicates which associate truth values to polygons. Formally, those predicates can be defined as: 
+\begin{equation}
+	p_i(\cdot) : P \rightarrow t \in \{true, false\}, i \in \left\{1,...,M\right\} 
+\end{equation}
+where $p_i$ is the predicate associated with the $i^{th}$ classifier. The polygon $P$ is dispatched to a classifier $T_i$ if $p_i$ associates true with this polygon. Assuming that an object should be dispatched to one and only one classifier, the predicates should verify the following property: 
+\begin{equation}
+	p_i = true \Leftrightarrow p_j = false, \forall j \neq i
+\end{equation}
 
-\paragraph{Dispatch} At this step, the workflow must dispatch each polygon to its corresponding classifier. To achieve this goal, it uses a  the 
+The resulting algorithm starts the same way as in Section \ref{sssec:single_single} : the image is applied the segment and locate operators (see Equation \ref{eqn:segment_locate_base}). Then, the resulting operators are evaluated by the predicates and dispatched to the classifiers. The resulting procedure is summarized in Algorithm \ref{algo:single_seg_several_classif}.
 
-\paragraph{Classify}
- 
+\begin{algorithm}\label{algo:single_seg_several_classif}
+Implementation of the $\mathcal{SLDC}(\cdot)$ operator with a single segmentation and several classifiers. 
+
+\begin{enumerate}
+	\item Apply the $\mathcal{S} \circ \mathcal{L}$ composition to the input image $\mathcal{I}$ to extract the objects of interest as a set of polygons $\left\{P_1, ..., P_N \right\}$ 
+	\item For each predicate $p_i \in \{p_1, ..., p_M\}$ :
+	\begin{enumerate}
+		\item compute the truth value associated with each polygon and dispatch them accordingly: 
+		\[
+			\mathcal{T}^*_i\left(\left\{P_1, ..., P_K\right\}\right) \rightarrow \{C_1, ..., C_K\}: p_i\{P_j\} = true, \forall j \in \left\{1, ..., K\right\}
+		\]
+	\end{enumerate} 
+\end{enumerate}
+\end{algorithm}
 
 \subsubsection{On encoding location and format using a polygon}
 \label{sssec:choice_polygon}
@@ -92,4 +115,4 @@ Describe and justify the choice of Python and of the various dependencies
 \subsection{Software architecture}
 Detail of the software architecture
 \subsection{How to use the framework}
-A toy example : finding disks in an image with grey background and guessing whether they're black or white 
+A toy example: finding disks in an image with grey background and guessing whether they're black or white 
