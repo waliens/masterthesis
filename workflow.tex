@@ -1,117 +1,134 @@
 \section{Principle}
 \subsection{History and first developments}
 \label{ssec:history_first_dev}
-The Segment-Locate-Dispatch-Classify (SLDC) workflow was first imagined by ?? Jean-Michel Begon ?? as a generalization of the work on thyroid nodule malignancy detection made in \cite{adeblire2013}. In the context of this master thesis, the author had implemented a processing workflow for detecting cells with inclusion and proliferative patterns (see ?? (thyroid)) in digitized thyroid punctions slides. The cells and patterns were detected by segmenting the images and then classified using machine learning techniques. As explained in the Section ?? (thyroid), the patterns could themselves contain cells with inclusion, so the author implemented a second processing workflow to detect those cells in the patterns. The idea behind the second workflow was similar to the first, that is segmenting the patterns and then classifying the detected objects. 
+The Segment-Locate-Dispatch-Classify (SLDC) workflow was first imagined by ?? Jean-Michel Begon ?? as a generalization of the work on thyroid nodule malignancy detection made in \cite{adeblire2013}. In the context of this master thesis, the author had implemented a processing workflow for detecting cells with inclusion and proliferative patterns (see ?? (thyroid)) in digitized thyroid punctions slides. The cells and patterns were detected by segmenting the images and then classified using machine learning techniques. As explained in the Section ?? (thyroid), patterns could themselves contain cells with inclusion. Therefore, the author implemented a second processing workflow to detect those cells. This workflow was similar to the first because it relied on a segmentation algorithm to isolate cells in patterns and then used machine learning to assess their malignity. 
 
 From those workflows, a common pattern emerged: performing detection using a segmentation algorithm and then classifying the detected objects using machine learning techniques. This pattern was at the root of the SLDC workflow idea. 
 
-\subsection{Algorithm: scope, terminology and notations}
-The workflow is a meta-algorithm\footnote{In this context, a meta-algorithm is an algorithm that coordinates the execution of other algorithms.} that detects and classifies objects contained in images. Particularly, given an image $\mathcal{I}$ as input, it is expected to output the information about the objects of interest in this image. It is worth noting that genericity is of the essence, that is the algorithm should be able to solve the widest possible range of object detection and classification problems while keeping minimal the work of the implementor.
- 
-\begin{definition}
-Formally, the algorithm can be seen as an operator $\mathcal{SLDC}(\cdot)$ such that
+\subsection{Algorithm}
+\label{ssec:workflow_algo}
+The workflow is a meta-algorithm\footnote{In this context, a meta-algorithm is an algorithm that coordinates the execution of other algorithms.} that detects and classifies objects contained in images. Particularly, given an image $\mathcal{I}$ as input, it is expected to output the information about the objects of interest in this image. Those information include the shape of the object, its location in the image as well as a classification label. Formally, the workflow can be seen as an operator $\mathcal{W}$:
 
-\begin{equation}
-	\label{eqn:workflow_operator}
-	\mathcal{SLDC}(\cdot) : \mathcal{I} \rightarrow \left\{(o_1,C_1),...,(o_N, C_N)\right\}
-\end{equation}
+\begin{definition} Let $\mathcal{W}$ be an operator such that 
+	\begin{equation}\label{eqn:workflow_operator}
+		\mathcal{W}(\cdot) : \mathcal{I} \rightarrow \left\{(o_1,C_1),...,(o_N, C_N)\right\}
+	\end{equation}
+	where $N$ is the number of objects of interest in $\mathcal{I}$ and $(o_i, C_i)$ is a tuple. The first element of this tuple, $o_i$, is a representation of the information (shape and location) about the $i^{th}$ object of interest found in $\mathcal{I}$ and the second, $C_i$, its classification label. 
 \end{definition}
 
-where $(o_i, C_i)$ is a tuple of which the first element, $o_i$, is the information about the $i^{th}$ object of interest found in $\mathcal{I}$ and the second, $C_i$, its classification label. 
+It is worth noting that genericity is of the essence. That is, the meta-algorithm should be able to solve the widest possible range of object detection and classification problems. Moreover, as explained in Section \ref{ssec:history_first_dev}, it should produce those outputs using image segmentation and machine learning. As far as the segmentation is concerned, genericity is usually hard to obtain because of the high variability of images across different problems. In order to ensure genericity, the workflow doesn't impose a particular segmentation procedure but expects the implementor to provide one that suits the problem. The same goes for the classification models used for predicting the labels of the objects. 
 
-In the subsequent sections, some additional operators are defined and used to implement the $\mathcal{SLDC}(\cdot)$ operator. First, a basic version of the algorithm is presented and then refined in order to achieve an acceptable level of genericity. Finally, the final algorithm is presented. 
+In the subsequent sections, some additional operators are defined and used to build the $\mathcal{W}$ operator. First, a basic version of the algorithm is presented and then refined in order to achieve an acceptable level of genericity.
 
-\subsubsection{Additional operators}
-\label{sssec:other_operators}
+\subsection{Additional operators}
+\label{ssec:other_operators}
 
-\begin{definition} \textbf{Segmentation} The segmentation is the step where the detection will actually be carried out. Formally, the goal of this phase is transform an image $\mathcal{I}$ into a binary mask $\mathcal{B}$ of which the pixel $b_{ij}$ is 1 if the pixel $p_{ij}$ of $\mathcal{I}$ located in an object of interest. Otherwise, it is set to 0. The segmentation operator $\mathcal{S}(\cdot)$ is such that
-
+Segmentation is the first operation applied to the image. This step of the algorithm is where the detection is actually carried out:
+ 
+\begin{definition} \label{def:segmentation_op}
+Let $\mathcal{S}$ be the \textbf{segment} operator. It is applied to an image $\mathcal{I}$ and produces a binary mask $\mathcal{B}$. The pixel $b_{ij}$ of $\mathcal{B}$ is 1 if the pixel $p_{ij}$ of $\mathcal{I}$ is located in an object of interest, otherwise it is 0. Formally:
 \begin{equation}
 	\label{eqn:operator_segment}
-	S(\cdot) : \mathcal{I} \rightarrow \mathcal{B}
+	\mathcal{S}(\cdot) : \mathcal{I} \rightarrow \mathcal{B}
 \end{equation}
 \end{definition}
 
-\begin{definition} \textbf{Location} While the segmented image theoretically contains the necessary information about the detected objects (i.e. shape and position in the image), the format of this information is inconvenient to query mostly because a single object cannot be extracted easily. The goal of the location step is therefore to transform the information into a more convenient format which encodes both the shape of the object and its position in the image. It appears that polygons match this specification. Using this representation, the location operator $\mathcal{L}(\cdot)$ can be formally defined as 
+While the segmented image theoretically contains the necessary information about the detected objects (i.e. shape and position in the image), the format of this information is inconvenient to query mostly because it is embedded into the binary mask and a single object cannot be trivially extracted. An intermediate step that would convert this information into a more convenient format is therefore needed. This format should encode both the shape of the object and its position in the image. It appears that polygons match this specification. 
+
+\begin{definition} \label{def:locate_op}
+Let $\mathcal{L}$ be the \textbf{location} operator. It is applied to a binary mask and produces a set of polygons encoding the shapes and positions of every object in the image. Formally:
 
 \begin{equation}
 	\mathcal{L}(\cdot) : \mathcal{B} \rightarrow \left\{P_1, ..., P_N\right\}
 \end{equation}
 
-where $\mathcal{B}$ is a binary image generated by a segmentation operator as defined in Equation \ref{eqn:operator_segment}, $N$ is the number of object of interest in $\mathcal{B}$ and $P_i$ is the polygon representing the geometric contour of the $i^{th}$ object in the image.
+where $\mathcal{B}$ is a binary mask as defined in Definition \ref{def:segmentation_op}, $N$ is the number of objects of interest in $\mathcal{B}$ and $P_i$ is the polygon representing the geometric contour of the $i^{th}$ object in $\mathcal{B}$.
 \end{definition}
 
-\begin{definition}\textbf{Classification} The classification is performed using a classification model, or \textit{classifier}. Such a model can be seen as an operator which produces a classification label given an object. Formally, the operator $\mathcal{T}(\cdot)$ is such that 
+The final step of the workflow is the object classification and is performed by a classifier. This object is passed a representation of the object (e.g. image, geometric information,...) and produces a classification label. In this theory, there is no restriction about the nature or representation of the objects processed by the classifiers.
 
+\begin{definition} Let $\mathcal{T}$ be the \textbf{classifier} operator. It is applied to an object of interest and produces a classification label. Formally:
 \begin{equation}
-	\mathcal{T}(\cdot) : o \rightarrow \mathcal{C}	
+	\mathcal{T}(\cdot) : o \rightarrow C
 \end{equation}
-
-where $o$ is the object and $C$ the computed classification label. An extension of this operator is given a set of objects and produces labels for all of them. Formally, the operator $\mathcal{T}^*(\cdot)$ is such that 
-
+where $o$ is the object and $C$, the classification label. 
+\end{definition}
+\begin{definition}
+Let $\mathcal{T}^*$ be an extension of $\mathcal{T}$ which is given a set of objects and produces labels for all of them. Formally: 
 \begin{equation}
 	\mathcal{T}^*(\cdot) : \left\{o_1, ..., o_N\right\}  \rightarrow \left\{C_1, ..., C_N\right\}
 \end{equation}
-
-In this theory, there is no restriction about the nature or representation of the objects processed by the classifiers.
 \end{definition}
 
-\subsubsection{Single segmentation, single classifier}
-\label{sssec:single_single}
+\subsection{Single segmentation, single classifier}
+\label{ssec:single_single}
 
-The most simple implementation of the $\mathcal{SLDC}$ operator would be the composition of the operator implemented in Section \ref{sssec:other_operators}. Particularly, the composition $\mathcal{S} \circ \mathcal{L}$ produces the polygons representing the objects and the composition $\mathcal{S} \circ \mathcal{L} \circ \mathcal{T}^*$ produces the labels. Formally: 
+The most simple construction of $\mathcal{W}$ would be the composition of the operators defined in Section \ref{ssec:other_operators}. Particularly, the composition $\mathcal{S} \circ \mathcal{L}$ would produce the polygons representing the objects and the composition $\mathcal{S} \circ \mathcal{L} \circ \mathcal{T}^*$ would produce the labels. Formally: 
 
 \begin{eqnarray}
 	\label{eqn:segment_locate_base} \mathcal{S} \circ \mathcal{L} : \mathcal{I} \rightarrow \left\{P_1, ..., P_N\right\} \\
 	\mathcal{S} \circ \mathcal{L} \circ \mathcal{T}^* : \mathcal{I} \rightarrow \left\{C_1, ..., C_N\right\}
 \end{eqnarray}
 
-Concretely, the definition of $\mathcal{S}$ and $\mathcal{T}^*$ would be left at the implementor's hands while $\mathcal{L}$ could be fixed by the workflow without loss of genericity. Such an algorithm could already solve any object detection and classification problem on image in which the labels can be predicted by a single classifier. However, in some cases, one classifier is not enough. This happen, for instance, when the image contains objects of very different nature and using several classifiers would yield better results than using a single one.
+As explained in Section \ref{ssec:workflow_algo}, the definition of $\mathcal{S}$ and $\mathcal{T}^*$ would be left at the implementor's hands. As far as the $\mathcal{L}$ operator is concerned, it could be imposed by the workflow without loss of genericity. Such an construction of $\mathcal{W}$ could already solve any object detection and classification problem on image in which the labels can be predicted by a single classifier. However, in some cases, one classifier is not enough. This happen, for instance, when the image contains objects of very different nature and using several classifiers would yield better results than using a single one. An extension is therefore needed.
 
-\subsubsection{Single segmentation, several classifiers}
-\label{sssec:single_several}
+\subsection{Single segmentation, several classifiers}
+\label{ssec:single_several}
 
-To increase the level of genericity, the implementation of the $\mathcal{SLDC}$ operator should support the usage of several classifiers. This can be done by adding a new step to the algorithm which consists in dispatching the polygons (i.e. the objects) to their most adequate classifier. This step being problem dependent, it is the responsibility of the implementor to define how the polygons are dispatched. However, to reduce implementor's work, the way of defining the dispatching can be fixed and formalized.
+In this attempt to construct a generic $\mathcal{W}$ operator, the image is assumed to contain $M$ distinct types of objects and the workflow uses $M$ classifiers (the $i^{th}$ classifier being noted as $\mathcal{T}_i$ with $i \in \{1,...,M\}$) to classify those objects. As an object should only be processed by one classifier, the workflow has to be added a new step which consists in dispatching each polygon to its most appropriate classifier. 
 
-\paragraph{Dispatch} Given $M$ classifiers, the dispatching can be defined with $M$ (?? mutually exclusive ??) predicates which associate truth values to polygons. Formally, those predicates can be defined as: 
-\begin{equation}
-	p_i(\cdot) : P \rightarrow t \in \{true, false\}, i \in \left\{1,...,M\right\} 
-\end{equation}
-where $p_i$ is the predicate associated with the $i^{th}$ classifier. The polygon $P$ is dispatched to a classifier $T_i$ if $p_i$ associates true with this polygon. Assuming that an object should be dispatched to one and only one classifier, the predicates should verify the following property: 
-\begin{equation}
-	p_i = true \Leftrightarrow p_j = false, \forall j \neq i
-\end{equation}
+\begin{definition}\label{def:dispatch_op} 
+	Let $\mathcal{D}$ be the dispatch operator. It is applied to a polygon and produces an integer which identifies the most appropriate classifier for processing this polygon: 
 
-The resulting algorithm starts the same way as in Section \ref{sssec:single_single} : the image is applied the segment and locate operators (see Equation \ref{eqn:segment_locate_base}). Then, the resulting operators are evaluated by the predicates and dispatched to the classifiers. The resulting procedure is summarized in Algorithm \ref{algo:single_seg_several_classif}.
+	\begin{equation}
+		\mathcal{D}(\cdot) : P \rightarrow i, i \in \{1,...,M\}
+	\end{equation}
+\end{definition}
+
+This step being problem dependent, it is the responsibility of the implementor to define the rules used for dispatching the polygons. However, the format of these rules can be defined.
+
+\begin{definition} 
+	Let $p_1, ..., p_M$ be a set of $M$ predicates which associate truth values to polygons:
+	\begin{equation}
+		p_i(\cdot) : P \rightarrow t \in \{true, false\}, i \in \left\{1,...,M\right\} 
+	\end{equation}
+	where $p_i$ is the predicate associated with the $i^{th}$ classifier. The polygon $P$ is dispatched to a classifier $\mathcal{T}_i$ if $p_i$ associates true to this polygon. To avoid dispatching an object to several classifier, the predicates should verify the following property:
+	\begin{equation}
+		p_i = true \Leftrightarrow p_j = false, \forall j \neq i
+	\end{equation} 
+\end{definition}
+
+Given this format, the $\mathcal{D}$ operator can be trivially constructed as it returns $i$ if $p_i$ is \textit{true}. The algorithm resulting from this construction of $\mathcal{W}$ starts the same way as in Section \ref{ssec:single_single}: the image is applied the segment and locate operators (see Equation \ref{eqn:segment_locate_base}). Then, the resulting polygons are dispatched and classified to produce the classification label. The resulting algorithm is summarized in Algorithm \ref{algo:single_seg_several_classif}. 
+
+While the range of problems that can be solved using this algorithm has been increased compared to the version with a single classifier, there are still some problems that cannot be. In particular, if some objects are included into other bigger objects, they won't be considered as independent objects.
 
 \begin{algorithm}\label{algo:single_seg_several_classif}
-Implementation of the $\mathcal{SLDC}(\cdot)$ operator with a single segmentation and several classifiers. 
-
+Construction of the $\mathcal{W}$ operator with a single segmentation and several classifiers. 
 \begin{enumerate}
-	\item Apply the $\mathcal{S} \circ \mathcal{L}$ composition to the input image $\mathcal{I}$ to extract the objects of interest as a set of polygons $\left\{P_1, ..., P_N \right\}$ 
-	\item For each predicate $p_i \in \{p_1, ..., p_M\}$ :
+	\item Apply the $\mathcal{S} \circ \mathcal{L}$ composition to the input image $\mathcal{I}$ to extract the objects of interest as the set of polygons $S_p \leftarrow \left\{P_1, ..., P_N \right\}$
+	\item Initialize the labels set $L \leftarrow \emptyset$
+	\item For each polygon $P \in S_p$:
 	\begin{enumerate}
-		\item compute the truth value associated with each polygon and dispatch them accordingly: 
-		\[
-			\mathcal{T}^*_i\left(\left\{P_1, ..., P_K\right\}\right) \rightarrow \{C_1, ..., C_K\}: p_i\{P_j\} = true, \forall j \in \left\{1, ..., K\right\}
-		\]
-	\end{enumerate} 
+		\item Compute the classification label $C \leftarrow \mathcal{T}_{\mathcal{D}(P)}(P)$
+		\item Place the label in the labels set $L \leftarrow L \cup \{C\}$
+	\end{enumerate}
+	\item Build and return objects and labels set $S_p \times L$ ($\times$ being a cartesian product).
 \end{enumerate}
 \end{algorithm}
 
-\subsubsection{On encoding location and format using a polygon}
-\label{sssec:choice_polygon}
+\subsection{Chaining workflows}
 
-\subsubsection{Chaining workflows}
+To take into account the case when objects of interest can be included into objects of bigger size in the image, the construction   
+of $\mathcal{W}$ has to be improved. A way of solving this issue is to chain executions of Algorithm \ref{algo:single_seg_several_classif}. While the first execution would extract objects of interests from the full image $\mathcal{I}$, the subsequent steps would have the responsibility to extract the included objects. 
 
+\section{Implementation}
 \subsection{Framework}
 
 Describe what we expect from a framework implementing the workflow (parallism, easy to use,...) 
 
-
-\section{Implementation}
+As explained in Section \ref{ssec:history_first_dev}, a first version of the workflow was developed in the context of Cytomine. 
 \subsection{Technologies}
-Describe and justify the choice of Python and of the various dependencies
+
 \subsection{Software architecture}
 Detail of the software architecture
 \subsection{How to use the framework}
