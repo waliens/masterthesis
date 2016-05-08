@@ -16,7 +16,7 @@ The workflow is a meta-algorithm\footnote{In this context, a meta-algorithm is a
 	where $N$ is the number of objects of interest in $\mathcal{I}$ and $(o_i, C_i)$ is a tuple. The first element of this tuple, $o_i$, is a representation of the information (shape and location) about the $i^{th}$ object of interest found in $\mathcal{I}$ and the second, $C_i$, its classification label. 
 \end{definition}
 
-It is worth noting that genericity is of the essence. That is, the meta-algorithm should be able to solve the widest possible range of object detection and classification problems. Moreover, as explained in Section \ref{ssec:history_first_dev}, it should produce those outputs using image segmentation and machine learning. As far as the segmentation is concerned, genericity is usually hard to obtain because of the high variability of images across different problems. In order to ensure genericity, the workflow doesn't impose a particular segmentation procedure but expects the implementor to provide one that suits the problem. The same goes for the classification models used for predicting the labels of the objects. 
+It is worth noting that genericity is of the essence. That is, the meta-algorithm should be able to solve the widest possible range of object detection and classification problems. Moreover, as explained in Section \ref{ssec:history_first_dev}, it should produce those outputs using image segmentation and machine learning. As far as the segmentation is concerned, genericity is usually hard to obtain because of the high variability of images across different problems. In order to ensure genericity, the workflow doesn't impose a particular segmentation procedure but expects the implementer to provide one that suits the problem. The same goes for the classification models used for predicting the labels of the objects. 
 
 In the subsequent sections, some additional operators are defined and used to build the $\mathcal{W}$ operator. First, a basic version of the algorithm is presented and then refined in order to achieve an acceptable level of genericity.
 
@@ -70,7 +70,7 @@ The most simple construction of $\mathcal{W}$ would be the composition of the op
 	\mathcal{S} \circ \mathcal{L} \circ \mathcal{T}^* : \mathcal{I} \rightarrow \left\{C_1, ..., C_N\right\}
 \end{eqnarray}
 
-As explained in Section \ref{ssec:workflow_algo}, the definition of $\mathcal{S}$ and $\mathcal{T}^*$ would be left at the implementor's hands. As far as the $\mathcal{L}$ operator is concerned, it could be imposed by the workflow without loss of genericity. Such an construction of $\mathcal{W}$ could already solve any object detection and classification problem on image in which the labels can be predicted by a single classifier. However, in some cases, one classifier is not enough. This happen, for instance, when the image contains objects of very different nature and using several classifiers would yield better results than using a single one. An extension is therefore needed.
+As explained in Section \ref{ssec:workflow_algo}, the definition of $\mathcal{S}$ and $\mathcal{T}^*$ would be left at the implementer's hands. As far as the $\mathcal{L}$ operator is concerned, it could be imposed by the workflow without loss of genericity. Such an construction of $\mathcal{W}$ could already solve any object detection and classification problem on image in which the labels can be predicted by a single classifier. However, in some cases, one classifier is not enough. This happen, for instance, when the image contains objects of very different nature and using several classifiers would yield better results than using a single one. An extension is therefore needed.
 
 \subsection{Single segmentation, several classifiers}
 \label{ssec:single_several}
@@ -85,10 +85,10 @@ In this attempt to construct a generic $\mathcal{W}$ operator, the image is assu
 	\end{equation}
 \end{definition}
 
-This step being problem dependent, it is the responsibility of the implementor to define the rules used for dispatching the polygons. However, the format of these rules can be defined.
+This step being problem dependent, it is the responsibility of the implementer to define the rules used for dispatching the polygons. However, the format of these rules can be defined.
 
 \begin{definition} 
-	Let $p_1, ..., p_M$ be a set of $M$ predicates which associate truth values to polygons:
+	Let $\mathcal{P}$ be a set of $M$ predicates $p_1, ..., p_M$ which associate truth values to polygons:
 	\begin{equation}
 		p_i(\cdot) : P \rightarrow t \in \{true, false\}, i \in \left\{1,...,M\right\} 
 	\end{equation}
@@ -112,14 +112,58 @@ Construction of the $\mathcal{W}$ operator with a single segmentation and severa
 		\item Compute the classification label $C \leftarrow \mathcal{T}_{\mathcal{D}(P)}(P)$
 		\item Place the label in the labels set $L \leftarrow L \cup \{C\}$
 	\end{enumerate}
-	\item Build and return objects and labels set $S_p \times L$ ($\times$ being a cartesian product).
+	\item Build and return objects and labels set $S_p \times L$.
 \end{enumerate}
 \end{algorithm}
 
 \subsection{Chaining workflows}
 
-To take into account the case when objects of interest can be included into objects of bigger size in the image, the construction   
-of $\mathcal{W}$ has to be improved. A way of solving this issue is to chain executions of Algorithm \ref{algo:single_seg_several_classif}. While the first execution would extract objects of interests from the full image $\mathcal{I}$, the subsequent steps would have the responsibility to extract the included objects. 
+To take into account the case when objects of interest can be included into objects of bigger size in the image, several instances of Algorithm \ref{algo:single_seg_several_classif} can be executed sequentially. 
+
+\begin{definition}\label{def:several_w_op}
+	Let $\mathcal{W}_1, ..., \mathcal{W}_K$ be a set of $K$ instances of Algorithm \ref{algo:single_seg_several_classif}. Each algorithm $\mathcal{W}_i$ has its own segmentation procedure $\mathcal{S}_i$ and its sets of dispatching predicates $\mathcal{P}_i$ and classifiers $S_{\mathcal{T},i}$.
+\end{definition}
+
+While $\mathcal{W}_1$ would be applied to the full image $\mathcal{I}$ to extract all the objects of interest, $\mathcal{W_2}, ..., \mathcal{W_K}$ are only passed image windows containing the previously detected objects.
+
+\begin{definition}\label{def:image_window}
+	Let $\mathcal{I}_P$ be an image window extracted from image $\mathcal{I}$ and containing the object represented by the polygon $P$. The window is the minimum bounding box containing this polygon.
+\end{definition}
+
+A further refinement would be to provide a way for the implementer to filter the polygons of which the windows are passed to a given workflow instance. Indeed, a given instance $\mathcal{W}_i$ might be designed to process only a certain category of objects and therefore should not be passed windows of objects that doesn't fall in this category. 
+
+\begin{definition}\label{def:filter_op}
+	Let $\mathcal{F}$ be the $\textbf{filter}$ operator. It is given a set of polygons $S_P$ and returns a subset $S'_P$ of polygons:
+	
+	\begin{equation}
+		\mathcal{F}(\cdot): S_P \rightarrow S'_P, S'_P \subseteq S_P
+	\end{equation}
+\end{definition}
+
+Each instance of the workflow $\mathcal{W}_i$ except $\mathcal{W}_1$ is therefore associated a filter operator $\mathcal{F}_i$. The resulting algorithm is given in Algorithm \ref{algo:chaining_workflows}.
+
+\begin{algorithm} \label{algo:chaining_workflows}
+	Construction of the $\mathcal{W}$ operator with $K$ instances of Algorithm \ref{algo:single_seg_several_classif}:
+
+	\begin{enumerate}
+		\item Execute the first workflow and save the results in the results set $R$: $R \leftarrow \mathcal{W}_1(\mathcal{I})$
+		\item Create the polygons set and initializes it with the polygons found from the execution of $\mathcal{W}_1$: $S_P \leftarrow \left\{P_1, ..., P_N\right\}$
+		\item For $i \in \{2, ..., K\}$:
+		\begin{enumerate}
+			\item Extract polygons to be processed by $\mathcal{W}_i$: $S'_P \leftarrow \mathcal{F}_i(S_P)$
+			\item For polygon $P \in S'_P$:
+			\begin{enumerate}
+				\item Execute the workflow on the image window and saves the results: $R \leftarrow R \cup \mathcal{W}_i(\mathcal{I}_P)$
+				\item Add the extracted polygons to the polygons set: $S_P \leftarrow S_P \cup \left\{P_1, ..., P_M\right\}$
+			\end{enumerate}
+		\end{enumerate}
+		\item Return the results set $R$
+	\end{enumerate}
+\end{algorithm}
+
+\subsection{Summary}
+The resulting meta-algorithm as defined in Algorithm \ref{algo:chaining_workflows} has now reached an acceptable level of genericity. The user would have to define
+
 
 \section{Implementation}
 \subsection{Framework}
