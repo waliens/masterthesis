@@ -1,9 +1,13 @@
-\section{Principle}
-\subsection{History and first developments}
-\label{ssec:history_first_dev}
-The Segment-Locate-Dispatch-Classify (SLDC) workflow was first imagined by ?? Jean-Michel Begon ?? as a generalization of the work on thyroid nodule malignancy detection made in \cite{adeblire2013}. In the context of this master thesis, the author had implemented a processing workflow for detecting cells with inclusion and proliferative patterns (see ?? (thyroid)) in digitized thyroid punctions slides. The cells and patterns were detected by segmenting the images and then classified using machine learning techniques. As explained in the Section ?? (thyroid), patterns could themselves contain cells with inclusion. Therefore, the author implemented a second processing workflow to detect those cells. This workflow was similar to the first because it relied on a segmentation algorithm to isolate cells in patterns and then used machine learning to assess their malignity. 
+In this chapter, a generic workflow for solving problems of objects detection and classification in images is presented. The history of this workflow is presented in Section \ref{sec:history_first_dev}. Section \ref{sec:workflow_principle} introduces the workflow itself. Finally, the implementation carried out in the context of this thesis is presented and discussed in Section \ref{sec:workflow_impl}.
 
-From those workflows, a common pattern emerged: performing detection using a segmentation algorithm and then classifying the detected objects using machine learning techniques. This pattern was at the root of the SLDC workflow idea. 
+\section{History and first developments}
+\label{sec:history_first_dev}
+The Segment-Locate-Dispatch-Classify (SLDC) workflow was first imagined by ?? Jean-Michel Begon ?? as a generalization of the work on thyroid nodule malignancy detection made in \cite{adeblire2013}. In the context of his master thesis, the author had implemented a processing workflow for detecting cells with inclusion and proliferative architectural patterns (see ?? (thyroid)) in digitized thyroid punctions slides. The cells and architectural patterns were detected by segmenting the images and then classified using machine learning techniques. As explained in the Section ?? (thyroid), some patterns could themselves contain cells with inclusion. Therefore, the author implemented a second processing workflow to detect those cells. This workflow was similar to the first because it relied on a segmentation algorithm to isolate cells in patterns and then used machine learning to assess their malignity. 
+
+From those workflows, a common pattern emerged: performing detection using a segmentation algorithm and then classifying the detected objects using machine learning techniques. In 2015, ?? Jean-Michel Begon ?? developed a first version of a generic workflow based on this pattern and gave it the name \textit{Segment-Locate-Dispatch-Classify}. Then, he applied its workflow to the thyroid case. Unfortunately, this implementation suffered from some drawbacks which made it hard to reuse in other contexts. The workflow was therefore re-worked in the context of this master thesis.
+
+\section{Principle}
+\label{sec:workflow_principle}
 
 \subsection{Algorithm}
 \label{ssec:workflow_algo}
@@ -16,7 +20,7 @@ The workflow is a meta-algorithm\footnote{In this context, a meta-algorithm is a
 	where $N$ is the number of objects of interest in $\mathcal{I}$ and $(o_i, C_i)$ is a tuple. The first element of this tuple, $o_i$, is a representation of the information (shape and location) about the $i^{th}$ object of interest found in $\mathcal{I}$ and the second, $C_i$, its classification label. 
 \end{definition}
 
-It is worth noting that genericity is of the essence. That is, the meta-algorithm should be able to solve the widest possible range of object detection and classification problems. Moreover, as explained in Section \ref{ssec:history_first_dev}, it should produce those outputs using image segmentation and machine learning. As far as the segmentation is concerned, genericity is usually hard to obtain because of the high variability of images across different problems. In order to ensure genericity, the workflow doesn't impose a particular segmentation procedure but expects the implementer to provide one that suits the problem. The same goes for the classification models used for predicting the labels of the objects. 
+It is worth noting that genericity is of the essence. That is, the meta-algorithm should be able to solve the widest possible range of object detection and classification problems. Moreover, as explained in Section \ref{sec:history_first_dev}, it should produce those outputs using image segmentation and machine learning. As far as the segmentation is concerned, genericity is usually hard to obtain because of the high variability of images across different problems. In order to ensure genericity, the workflow doesn't impose a particular segmentation procedure but expects the implementer to provide one that suits the problem. The same goes for the classification models used for predicting the labels of the objects. 
 
 In the subsequent sections, some additional operators are defined and used to build the $\mathcal{W}$ operator. First, a basic version of the algorithm is presented and then refined in order to achieve an acceptable level of genericity.
 
@@ -45,7 +49,7 @@ Let $\mathcal{L}$ be the \textbf{location} operator. It is applied to a binary m
 where $\mathcal{B}$ is a binary mask as defined in Definition \ref{def:segmentation_op}, $N$ is the number of objects of interest in $\mathcal{B}$ and $P_i$ is the polygon representing the geometric contour of the $i^{th}$ object in $\mathcal{B}$.
 \end{definition}
 
-The final step of the workflow is the object classification and is performed by a classifier. This object is passed a representation of the object (e.g. image, geometric information,...) and produces a classification label. In this theory, there is no restriction about the nature or representation of the objects processed by the classifiers.
+The final step of the workflow is the object classification and is performed by a classifier which is passed a representation of the object (e.g. image, geometric information,...) and produces a classification label. In this theory, there is no restriction about the nature or representation of the objects processed by the classifiers.
 
 \begin{definition} Let $\mathcal{T}$ be the \textbf{classifier} operator. It is applied to an object of interest and produces a classification label. Formally:
 \begin{equation}
@@ -63,12 +67,15 @@ Let $\mathcal{T}^*$ be an extension of $\mathcal{T}$ which is given a set of obj
 \subsection{Single segmentation, single classifier}
 \label{ssec:single_single}
 
-The most simple construction of $\mathcal{W}$ would be the composition of the operators defined in Section \ref{ssec:other_operators}. Particularly, the composition $\mathcal{S} \circ \mathcal{L}$ would produce the polygons representing the objects and the composition $\mathcal{S} \circ \mathcal{L} \circ \mathcal{T}^*$ would produce the labels. Formally: 
+The most simple construction of $\mathcal{W}$ would be the composition of the operators defined in Section \ref{ssec:other_operators}. Particularly, the compositions $\mathcal{S} \circ \mathcal{L}$ and $\mathcal{S} \circ \mathcal{L} \circ \mathcal{T}^*$ would respectively produce the polygons representing the objects and and their labels. This construction is summarized in Algorithm \ref{algo:single_seg_single_classif}: 
 
-\begin{eqnarray}
-	\label{eqn:segment_locate_base} \mathcal{S} \circ \mathcal{L} : \mathcal{I} \rightarrow \left\{P_1, ..., P_N\right\} \\
-	\mathcal{S} \circ \mathcal{L} \circ \mathcal{T}^* : \mathcal{I} \rightarrow \left\{C_1, ..., C_N\right\}
-\end{eqnarray}
+\begin{algorithm} \label{algo:single_seg_single_classif} 
+	Construction of $\mathcal{W}$ using one segmentation and one classifier:
+	
+	\begin{enumerate}
+		\item Return $\left(\mathcal{S} \circ \mathcal{L}\right)\left(\mathcal{I}\right) \times \left(\mathcal{S} \circ \mathcal{L} \circ \mathcal{T}^*\right)\left(\mathcal{I}\right)$
+	\end{enumerate}
+\end{algorithm}
 
 As explained in Section \ref{ssec:workflow_algo}, the definition of $\mathcal{S}$ and $\mathcal{T}^*$ would be left at the implementer's hands. As far as the $\mathcal{L}$ operator is concerned, it could be imposed by the workflow without loss of genericity. Such an construction of $\mathcal{W}$ could already solve any object detection and classification problem on image in which the labels can be predicted by a single classifier. However, in some cases, one classifier is not enough. This happen, for instance, when the image contains objects of very different nature and using several classifiers would yield better results than using a single one. An extension is therefore needed.
 
@@ -98,9 +105,11 @@ This step being problem dependent, it is the responsibility of the implementer t
 	\end{equation} 
 \end{definition}
 
-Given this format, the $\mathcal{D}$ operator can be trivially constructed as it returns $i$ if $p_i$ is \textit{true}. The algorithm resulting from this construction of $\mathcal{W}$ starts the same way as in Section \ref{ssec:single_single}: the image is applied the segment and locate operators (see Equation \ref{eqn:segment_locate_base}). Then, the resulting polygons are dispatched and classified to produce the classification label. The resulting algorithm is summarized in Algorithm \ref{algo:single_seg_several_classif}. 
+Given this format, the $\mathcal{D}$ operator can be trivially constructed as it returns $i$ if $p_i$ is \textit{true}. The algorithm resulting from this construction of $\mathcal{W}$ starts the same way as in Section \ref{ssec:single_single}: the image is applied the segment and locate operators. Then, the resulting polygons are dispatched and classified to produce the classification label. The resulting algorithm is summarized in Algorithm \ref{algo:single_seg_several_classif}. 
 
-While the range of problems that can be solved using this algorithm has been increased compared to the version with a single classifier, there are still some problems that cannot be. In particular, if some objects are included into other bigger objects, they won't be considered as independent objects.
+While the range of problems that can be solved using this algorithm has been increased compared to the version with a single classifier, there are still some problems that cannot be. In particular, if some objects are included into other bigger objects, they won't be considered as independent objects. 
+
+Before extending the algorithm for handling this case, it is worth noting that Algorithm \ref{algo:single_seg_several_classif} is completely compatible with Algorithm \ref{algo:single_seg_single_classif}. Indeed, if there is only one classifier (i.e. $M = 1$) and the predicate $p_1$ always returns $true$, then both algorithms are exactly the same. 
 
 \begin{algorithm}\label{algo:single_seg_several_classif}
 Construction of the $\mathcal{W}$ operator with a single segmentation and several classifiers. 
@@ -118,13 +127,13 @@ Construction of the $\mathcal{W}$ operator with a single segmentation and severa
 
 \subsection{Chaining workflows}
 
-To take into account the case when objects of interest can be included into objects of bigger size in the image, several instances of Algorithm \ref{algo:single_seg_several_classif} can be executed sequentially. 
+To handle the case when objects of interest can be included into objects of bigger size in the image, a solution consists in executing several instances of Algorithm \ref{algo:single_seg_several_classif} sequentially one after another. 
 
 \begin{definition}\label{def:several_w_op}
-	Let $\mathcal{W}_1, ..., \mathcal{W}_K$ be a set of $K$ instances of Algorithm \ref{algo:single_seg_several_classif}. Each algorithm $\mathcal{W}_i$ has its own segmentation procedure $\mathcal{S}_i$ and its sets of dispatching predicates $\mathcal{P}_i$ and classifiers $S_{\mathcal{T},i}$.
+	Let $\mathcal{W}_1, ..., \mathcal{W}_K$ be a set of $K$ instances of Algorithm \ref{algo:single_seg_several_classif}. Each algorithm $\mathcal{W}_i$ has its own segmentation procedure $\mathcal{S}_i$ and proper sets of dispatching predicates $\mathcal{P}_i$ and classifiers $S_{\mathcal{T},i}$.
 \end{definition}
 
-While $\mathcal{W}_1$ would be applied to the full image $\mathcal{I}$ to extract all the objects of interest, $\mathcal{W_2}, ..., \mathcal{W_K}$ are only passed image windows containing the previously detected objects.
+While $\mathcal{W}_1$ would be applied to the full image $\mathcal{I}$ to extract all the objects of interest, $\mathcal{W}_2, ..., \mathcal{W}_K$ are only passed image windows containing the previously detected objects.
 
 \begin{definition}\label{def:image_window}
 	Let $\mathcal{I}_P$ be an image window extracted from image $\mathcal{I}$ and containing the object represented by the polygon $P$. The window is the minimum bounding box containing this polygon.
@@ -140,7 +149,7 @@ A further refinement would be to provide a way for the implementer to filter the
 	\end{equation}
 \end{definition}
 
-Each instance of the workflow $\mathcal{W}_i$ except $\mathcal{W}_1$ is therefore associated a filter operator $\mathcal{F}_i$. The resulting algorithm is given in Algorithm \ref{algo:chaining_workflows}.
+Each instance of the workflow $\mathcal{W}_i$ except $\mathcal{W}_1$ is therefore associated a filter operator $\mathcal{F}_i$. The resulting algorithm is given in Algorithm \ref{algo:chaining_workflows} and has now reached an acceptable level of genericity.
 
 \begin{algorithm} \label{algo:chaining_workflows}
 	Construction of the $\mathcal{W}$ operator with $K$ instances of Algorithm \ref{algo:single_seg_several_classif}:
@@ -153,7 +162,7 @@ Each instance of the workflow $\mathcal{W}_i$ except $\mathcal{W}_1$ is therefor
 			\item Extract polygons to be processed by $\mathcal{W}_i$: $S'_P \leftarrow \mathcal{F}_i(S_P)$
 			\item For polygon $P \in S'_P$:
 			\begin{enumerate}
-				\item Execute the workflow on the image window and saves the results: $R \leftarrow R \cup \mathcal{W}_i(\mathcal{I}_P)$
+				\item Execute workflow $\mathcal{W}_i$ on the image window and saves the results: $R \leftarrow R \cup \mathcal{W}_i(\mathcal{I}_P)$
 				\item Add the extracted polygons to the polygons set: $S_P \leftarrow S_P \cup \left\{P_1, ..., P_M\right\}$
 			\end{enumerate}
 		\end{enumerate}
@@ -161,18 +170,21 @@ Each instance of the workflow $\mathcal{W}_i$ except $\mathcal{W}_1$ is therefor
 	\end{enumerate}
 \end{algorithm}
 
-\subsection{Summary}
-The resulting meta-algorithm as defined in Algorithm \ref{algo:chaining_workflows} has now reached an acceptable level of genericity. The user would have to define
-
-
 \section{Implementation}
+\label{sec:workflow_impl}
+In this section, details about the implementation of the workflow are discussed.  
 \subsection{Framework}
-
 Describe what we expect from a framework implementing the workflow (parallism, easy to use,...) 
 
-As explained in Section \ref{ssec:history_first_dev}, a first version of the workflow was developed in the context of Cytomine. 
-\subsection{Technologies}
+As explained in Section \ref{sec:history_first_dev}, a first version of the workflow was developed in the context of Cytomine. 
+\subsection{Language}
+The first design choice occurring in the implementation of an existing algorithm is obviously the language in which this implementation will be made. As far as the workflow is concerned, the chosen language was Python and this choice was motivated by the following arguments. 
 
+First of all, Python has become a great language for scientific computing as it has been augmented with excellent open source libraries over the years. First, the SciPy ecosystem which includes the SciPy \cite{oliphant:2007} and NumPy \cite{vanderwalt:2011} libraries. The first is a collection of numerical algorithms and domain-specific toolboxes (signal processing, optimization, statistics,...). The second is a fundamental package for numerical computations which provides an efficient representation of multi-dimensional arrays and operations on them. Built on top of the SciPy ecosystem comes Scikit-Learn \cite{pedregosa:2011}, a library that provides simple, efficient and reusable tools for data mining and machine learning. Image processing is not outdone with a Python binding for the huge OpenCV library \cite{opencv_library} or scikit-image \cite{scikit-image}, an alternative built on top of the SciPy ecosystem. Both of them provide a collection of well-known image processing algorithms. All those libraries obviously provide a very good ecosystem for developing object detection and classification algorithms.
+
+Python was also chosen because the implementation of the workflow was carried out in the context of Cytomine (see Section ??). The final goal being the detection and classification of objects in images stored on Cytomine servers. As those images and their metadata are exposed through an API interfaced by a Python client, it was essential that the workflow could use this client to communicate with the back-end. 
+
+ 
 \subsection{Software architecture}
 Detail of the software architecture
 \subsection{How to use the framework}
