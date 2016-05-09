@@ -177,7 +177,7 @@ The workflow presented in Section \ref{sec:workflow_principle} is now defined. T
 \subsection{Requirements}
 The main requirements for the framework are listed hereafter.
 
-\paragraph{Genericity} As for the algorithm, the framework should be able to solve the widest possible range of objects detection and classification problems in any context. This property has more implication in the case of the framework design than for the algorithm design, especially when it comes to fixing the representation of the various involved data types (i.e. image, polygon,...). Moreover, the implementer should be able to do whatever he wants to do with the results of the computations. 
+\paragraph{Genericity} As for the algorithm, the framework should be able to solve the widest possible range of objects detection and classification problems in any context. This property has more implication in the case of the framework design than for the algorithm design, especially when it comes to fixing the representation of the various involved data types (i.e. image, polygon,...).
 
 \paragraph{Efficiency} While the framework has no control over the efficiency of the algorithms defined by the implementer (i.e. segmentation or classification procedures), the coordination of those algorithms should not induce a significant overhead in the overall execution. 
 
@@ -192,32 +192,62 @@ The main requirements for the framework are listed hereafter.
 \paragraph{Ease of use} The work of the implementer should be kept as minimal as possible. He should only have to define the logic of problem dependent elements of the workflow: segmentation, dispatching rules, classifiers,... 
 
 \subsection{Language}
+\label{ssec:language}
 The first design choice occurring in the implementation of an existing algorithm is obviously the language in which this implementation will be made. As far as the workflow is concerned, the chosen language was Python. Indeed, this language provides a very complete environment for developing objects detection and segmentation algorithms which would obviously contribute to the overall ease of use the framework. 
 
 First of all, the language has many features which allows developers to quickly come up with solutions to problems. Especially, it is strongly and dynamically typed, multi-paradigm (imperative, functional, object oriented,...), interactive (it can be used in an interactive console), interpreted and garbage-collected. It also support usual data structures such as lists, arrays, dictionaries and sets natively and provide operations for manipulating them in a concise way. 
 
 In addition to its built-in features, Python has become a great language for scientific computing as it has been augmented with excellent open source libraries over the years. First, the SciPy ecosystem which includes the SciPy \cite{oliphant:2007} and NumPy \cite{vanderwalt:2011} libraries. The first is a collection of numerical algorithms and domain-specific toolboxes (signal processing, optimization, statistics,...). The second is a fundamental package for numerical computations which provides an efficient representation of multi-dimensional arrays and operations on them. Built on top of the SciPy ecosystem comes Scikit-Learn \cite{pedregosa:2011}, a library that provides simple, efficient and reusable tools for data mining and machine learning. Image processing is not outdone with a Python binding for the huge OpenCV library \cite{opencv_library}. Two alternatives are scikit-image \cite{scikit-image} which is built on top of the SciPy ecosystem or the Pillow library \cite{pillow}. All of them provide a collection of well-known image processing algorithms. Another useful library is Shapely \cite{shapely} which provides a representation for geometric objects such as polygons as well as operations to apply on them. 
 
-Then, Python was also chosen because the workflow was implemented to be integrated with Cytomine (see Section ??). Particularly, the final goal was the detection and classification of objects in images stored on Cytomine servers. As those images and their metadata are exposed through an API interfaced by a Python client, it was essential that the workflow could use this client to communicate with the back-end. 
+Then, Python was also chosen because the workflow was implemented to be integrated with Cytomine (see Section ??). Particularly, the final goal was the detection and classification of objects in images stored on Cytomine servers. As those images and their metadata are exposed through an API interfaced by a Python client, it was essential that the workflow could use this client to communicate with the back-end. As the Cytomine client was implemented in the version 2.7.11 of Python, this version was also used for developing the library. 
 
- 
 \subsection{Software architecture}
+As one of the main goal of this implementation is to reuse it for solving other problems, the framework was implemented as a Python library and released on GitHub ?? url ??.
+
+To ensure code modularity, classes were organized in packages. To prevent any name clashes with other Python libraries, those packages were placed in a root package called \texttt{sldc}. 
 
 \subsubsection{Image representation} 
-The image representation manipulated by the framework is a critical point of the architecture. Indeed, on the one hand, it should be abstract enough so that implementers can apply the workflow to problems where they have their own image format. On the other hand, it should provide access to a concrete representation that the steps of the workflow fixed by the framework (i.e. location) could use to extract necessary information. This is achieved by using two representations: an abstract one and a concrete one. As much as possible the framework works with the abstract representation and only switch to the other one when required. 
+The image representation design is a critical point of the framework architecture. Indeed, on the one hand, it should be abstract enough so that implementers can apply the workflow on images in any format. On the other hand, it should provide access to a concrete representation available to the framework. Indeed, some steps need to access this representation to extract useful data. This is the case for location which processes the binary mask to extract polygons. 
 
-The representation should also provide a way of extracting sub-windows from an image. The application of this feature would be twofold. First, it is needed by the workflow (see Definition \ref{def:image_window}). Then, it could be used to address the large images handling requirement and to overcome the fact that a whole image is not assumed to fit into memory. Especially, the image would be splitted into smaller chunks called tiles and those tiles would be processed one after another.
+The representation should also provide a way of extracting sub-windows from an image. The need for this feature is twofold. First, it is needed by the workflow (see Definition \ref{def:image_window}). Then, it could be used to address the large images handling requirement and to overcome the fact that a whole image is not assumed to fit into memory. The idea is to split an image into smaller chunks called tiles which could be loaded into memory and processed one after another. Especially, the tiles would be applied the first part of the workflow that is segmentation and location. As the polygons of each tile are extracted independently, it might occur that a single object of interest which spreads over several tiles ends up being splitted into several polygons. To make sure there is a one to one relationship between a polygon and an object, an additional step must be inserted before the dispatching. It would consist in merging the polygons representing a same object. This step is detailed in \ref{sssec:merging}.
 
-The final design is shown in Figure \ref{fig:uml_image_package}.
+The abstract image representation and related classes were implemented into the \texttt{sldc.image} package presented in the UML diagram shown in Figure \ref{fig:uml_image_package}.
 
-Especially, the concrete representation is passed to the segmentation procedure (see operator $\mathcal{D}$ in Definiton \ref{def:segmentation_op}) and is also use to represent the binary mask produced by the segmentation and processed by the locate procedure (see $\mathcal{L}$ in \ref{def:locate_op}). 
+The \texttt{Image} class is the abstract image representation mentioned above. It provides three abstract methods for checking image dimensions (width, height and number of channels) and a fourth one which is expected to return the concrete representation of the image as a Numpy multi-dimensional array. Using Numpy arrays was motivated by the fact that they are compatible with the various image processing libraries presented in Section \ref{ssec:language}. This structure already solves the first issue presented in this Section. Especially, the implementer image format should be encapsulated into an extension of \texttt{Image} which would implement the conversion from this format to the Numpy array representation.
+
+An image window is materialized by the \texttt{ImageWindow} class which is based on the decorator pattern. It stores information about the position and size of the window as well as a reference to the parent image. Especially, location and size are respectively represented by coordinates of the first top left pixel included in the window (coordinates are referenced to the top left corner of the parent image) and by the window width and height. As an image window instance provides a level of indirection on top of another image, some methods are provided to fetch the base image as well as the absolute offset\footnote{The absolute offset is the offset of the window referenced to the base image's top left pixel. It is different from the image window offset if its parent image is also an image window.}.
+
+A tile is also represented by a class named \texttt{Tile} which extends \texttt{ImageWindow} and augment it with an integer identifier field. As tiles can potentially be derived, a \texttt{TileBuilder} interface was developed. As suggested by the name, a class implementing this interface is responsible for building specific tile objects. This structure is actually an application of the factory method pattern which has the advantage of allowing the framework to build tile objects while remaining unaware about the class that will actually be instantiated.
+
+Finally, to make it easier to iterate over the tiles of an image two classes were developed : \texttt{TileTopology} and \texttt{TileTopologyIterator}. The first is responsible for generating a set of tiles that fully covers an image. To generate this set of tiles, the topology object relies on three parameters : the tile maximum width and height and the overlap. The overlap parameter allows the merging procedure to be simpler as polygons corresponding to a same object which is spread over several tiles will have a geometric intersection. However, this parameter should be set carefully because it induces some additional computations as some parts of the image will be present in several tiles. The \texttt{TileTopology} also provides methods for checking whether a tile is the neighbour of another. The \texttt{TileTopologyIterator} allows to iterate over the tiles defined by a tile topology.
 
 \begin{figure}[h]
 	\center 
 	\includegraphics[scale=0.9]{image/uml_image_package.png}
-	\caption{Image representation classes}
+	\caption{Image representation classes - package \texttt{sldc.image}}
 	\label{fig:uml_image_package}
 \end{figure}
+
+\subsubsection{Segmentation}
+As explained in Section \ref{ssec:single_single}, the segmentation is not fixed by the framework and the implementer is expected to provide its own implementation. To represent this constraint in the framework, a \texttt{Segmenter} interface was defined. It provides a single method, \texttt{segment}, which receives a Numpy representation of the image and is expected to return another Numpy array storing the binary mask marking the objects of interest contained in this image. The binary mask however doesn't conform strictly to Definition \ref{def:segmentation_op} as pixels belonging to an object of interest are marked with the integer value 255 (which corresponds to white in the grayscale color space) instead of 1. 
+
+\begin{figure}[h]
+	\center 
+	\includegraphics[scale=0.9]{image/uml_segmenter_package.png}
+	\caption{Package \texttt{sldc.segmenter}}
+	\label{fig:uml_segmenter_package}
+\end{figure}
+
+\subsubsection{Location}
+
+\subsubsection{Merging}
+\label{sssec:merging}
+
+\subsubsection{Dispatch and classification}
+
+\subsubsection{Workflow}
+
+\subsubsection{Workflow chain}
 
 \subsection{How to use the framework}
 A toy example: finding disks in an image with grey background and guessing whether they're black or white 
