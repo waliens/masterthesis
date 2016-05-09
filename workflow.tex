@@ -127,7 +127,7 @@ Construction of the $\mathcal{W}$ operator with a single segmentation and severa
 
 \subsection{Chaining workflows}
 
-To handle the case when objects of interest can be included into objects of bigger size in the image, a solution consists in executing several instances of Algorithm \ref{algo:single_seg_several_classif} sequentially one after another. 
+To handle the case when objects of interest can be included into objects of bigger size in the image, a solution consists in executing several instances of Algorithm \ref{algo:single_seg_several_classif} one after another. 
 
 \begin{definition}\label{def:several_w_op}
 	Let $\mathcal{W}_1, ..., \mathcal{W}_K$ be a set of $K$ instances of Algorithm \ref{algo:single_seg_several_classif}. Each algorithm $\mathcal{W}_i$ has its own segmentation procedure $\mathcal{S}_i$ and proper sets of dispatching predicates $\mathcal{P}_i$ and classifiers $S_{\mathcal{T},i}$.
@@ -230,13 +230,6 @@ Finally, to make it easier to iterate over the tiles of an image two classes wer
 
 \subsubsection{Segmentation}
 As explained in Section \ref{ssec:single_single}, the segmentation is not fixed by the framework and the implementer is expected to provide its own implementation. To represent this constraint in the framework, a \texttt{Segmenter} interface was defined. It provides a single method, \texttt{segment}, which receives a Numpy representation of the image and is expected to return another Numpy array storing the binary mask marking the objects of interest contained in this image. The binary mask however doesn't conform strictly to Definition \ref{def:segmentation_op} as pixels belonging to an object of interest are marked with the integer value 255 (which corresponds to white in the grayscale color space) instead of 1. 
-
-\begin{figure}[h]
-	\center 
-	\includegraphics[scale=0.9]{image/uml_segmenter_package.png}
-	\caption{Package \texttt{sldc.segmenter}}
-	\label{fig:uml_segmenter_package}
-\end{figure}
 
 \subsubsection{Location}
 
