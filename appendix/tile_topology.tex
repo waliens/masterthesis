@@ -1,0 +1,23 @@
+\label{apdx:tile_topology}
+
+As presented in Section \ref{sssec:work_image_repr}, the tile topology objects associate unique increasing identifiers to tiles. Using this representation allows to reach a $\mathcal{O}(1)$ time complexity for all the methods of the class \texttt{TileTopology}. Indeed, the results produced by those methods can be computed using simple formulas. In the following formulas, $i$ refers to a tile identifier:
+
+\begin{itemize}
+	\item The number $t_{row}$ of tiles on a row is given by:
+	\begin{equation} \label{eqn:nb_tile_on_row}
+		t_{row} = \left\{
+		\begin{array}{cl}
+			\left\lceil \dfrac{w - o_p}{w_m - o_p}\right\rceil&\text{, if } w > w_m\\
+			1&\text{, otherwise}\\
+		\end{array}
+		\right.	
+	\end{equation}
+	\item The number $t_{col}$ of tiles on a column is given by Equation \ref{eqn:nb_tile_on_row} applied to the image height $h$ and maximum tile height $h_m$ instead of $w$ and $w_m$. 
+	\item The total number $t$ of tiles in the tile topology is simply $t_{row} \times t_{col}$.
+	\item The neighbour tiles identifiers can be obtained by performing subtractions and additions. For instance, for a tile  which is not on the edge of the image, the identifiers of its left, top, right and bottom neighbours are respectively $i - 1$, $i - t_{row}$, $i + 1$, $i + t_{row}$.
+	\item The tile offset $(t_{\text{off},x}, t_{\text{off},y})$ can be retrieved as follows:
+	\begin{eqnarray}
+		t_{\text{off},x} = (t_{row} - o_p) \times \left[(i-1) \mod t_{row} \right] \\
+		t_{\text{off},y} = (t_{col} - o_p) \times \left\lfloor\frac{i - 1}{t_{row}}\right\rfloor
+	\end{eqnarray} 
+\end{itemize}
