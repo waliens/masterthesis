@@ -12,12 +12,43 @@
 \usepackage{listings}
 \usepackage{algpseudocode}
 \usepackage[bookmarks = false,hidelinks]{hyperref}
+\usepackage{color}
 
 \newtheorem{algorithm}{Algorithm}
 \newtheorem{definition}{Definition}
 
 \setcounter{secnumdepth}{3} % include subsubsection in section numbering
 \setcounter{tocdepth}{3} % include subsubsection in toc
+
+
+%% Create python environment
+%% http://tex.stackexchange.com/questions/199375/problem-with-listings-package-for-python-syntax-coloring
+
+% Defining colors
+\definecolor{deepblue}{rgb}{0,0,0.5}
+\definecolor{deepred}{rgb}{0.6,0,0}
+\definecolor{deepgreen}{rgb}{0,0.5,0}
+
+\newcommand\pythonstyle{\lstset{
+  language=Python,
+  backgroundcolor=\color{white}, %%%%%%%
+  basicstyle=\footnotesize\ttfamily,
+  otherkeywords={self,def,for,@property},            
+  keywordstyle=\bf\color{deepblue},
+  emph={Segmenter,ColorClassifier,PolygonClassifier,SquareRule,CircleRule,DispatchingRule,CustomSegmenter,WorkflowBuilder,NumpyImage,__init__},          
+  emphstyle=\bf\color{deepred},    
+  stringstyle=\color{deepgreen},
+  commentstyle=\color{red},  %%%%%%%%            
+  showstringspaces=false            
+}}
+
+% Python environment
+\lstnewenvironment{python}[1][]
+{
+\pythonstyle
+\lstset{#1}
+}
+{}
 
 %% To uncomment if needed
 %\usepackage{array}
@@ -108,7 +139,6 @@
 	\newpage
 	% End list of figures =====================
 
-	
 	% Start list of tables ====================
 	\listoftables
 	% End list of tables ======================
