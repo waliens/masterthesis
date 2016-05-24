@@ -3,20 +3,20 @@ In this chapter, a generic workflow for solving problems of objects detection an
 
 In 2015, ?? JM Begon ?? developed a first version of a generic workflow based on this pattern and gave it the name \textit{Segment-Locate-Dispatch-Classify} (SLDC). Unfortunately, this implementation suffered from some drawbacks which made it hard to reuse in other contexts. The workflow was therefore re-worked in the context of this master thesis. 
  
-In the Section \ref{sec:workflow_principle}, the workflow is introduced and formalized. Especially, the various steps are detailed and then combined into an algorithm which is gradually improved to reach an acceptable level of genericity. In Section  \ref{sec:workflow_impl}, the actual implementation of the workflow, so-called \textit{framework}, made in the context of the master thesis is presented (?? lien GitHub ??). First are explained the reasons why the previous implementation was replaced by a new one. The new framework is then presented starting with its requirements as well as a justification for the choice of Python as the implementation language. The software architecture is then broken down and the purpose of each package and important class are explained. The penultimate section presents the developments made for testing the various components of the framework. Finally, the last section illustrates the usage of the framework for solving a toy problem.
+In Section \ref{sec:workflow_principle}, the workflow is introduced and formalized. Especially, the various steps are detailed and then combined into an algorithm which is gradually improved to reach an acceptable level of genericity. In Section  \ref{sec:workflow_impl}, the actual implementation of the workflow, so-called \textit{framework}, made in the context of the master thesis is presented (?? lien GitHub ??). First are explained the reasons why the previous implementation was replaced by a new one. The new framework is then presented starting with its requirements as well as a justification for the choice of Python as the implementation language. The software architecture is then broken down and the purpose of each package and important class are explained. Section \ref{ssec:work_test} presents the developments made for testing the various components of the framework. Finally, the last section illustrates the usage of the framework for solving a toy problem.
 
 \section{Principle}
 \label{sec:workflow_principle}
 
 \subsection{Algorithm}
 \label{ssec:workflow_algo}
-The workflow is a meta-algorithm\footnote{In this context, a meta-algorithm is an algorithm that coordinates the execution of other algorithms.} that detects and classifies objects contained in images. Particularly, given a two-dimensional\footnote{A third dimension can be dedicated to the images channel (i.e. 3 channels for RGB images, 4 channels for RGBA images).} image $\mathcal{I}$ as input, it is expected to output the information about the objects of interest contained in this image. Those information include the shape of the object, its location as well as a classification label. Formally, the workflow can be seen as an operator $\mathcal{W}$:
+The workflow is a meta-algorithm\footnote{In this context, a meta-algorithm is an algorithm that coordinates the execution of other algorithms.} that detects and classifies objects contained in images. Particularly, given as input a two-dimensional\footnote{A third dimension can be dedicated to the images channel (i.e. 3 channels for RGB images, 4 channels for RGBA images).} image $\mathcal{I}$ from the set of all possible images $I$, it is expected to output the information about the objects of interest contained in this image. Those information include the shape of the object, its location as well as a classification label. Formally, the workflow can be seen as an operator $\mathcal{W}$:
 
 \begin{definition} Let $\mathcal{W}$ be an operator such that 
 	\begin{equation}\label{eqn:workflow_operator}
-		\mathcal{W}(\cdot) : \mathcal{I} \rightarrow \left\{(o_1,C_1),...,(o_N, C_N)\right\}
+		\mathcal{W}(\cdot) : I \rightarrow R^N \mid \mathcal{I} \mapsto \left\{(o_1,C_1),...,(o_N, C_N)\right\}, N \in \mathbb{N}_0
 	\end{equation}
-	where $N$ is the number of objects of interest in $\mathcal{I}$ and $(o_i, C_i)$ is a tuple. The first element of this tuple, $o_i$, is a representation of the information (shape and location) about the $i^{th}$ object of interest found in $\mathcal{I}$ and the second, $C_i$, its classification label. 
+	where $N$ is the number of objects of interest in $\mathcal{I}$ and $(o_i, C_i)$ is a result tuple belonging to the set $R$ of all possible results tuples. The first element of this tuple, $o_i$, is a representation of the information (shape and location) about the $i^{th}$ object of interest found in $\mathcal{I}$ and the second, $C_i$, its classification label. 
 \end{definition}
 
 It is worth noting that genericity is of the essence. That is, the meta-algorithm should be able to solve the widest possible range of object detection and classification problems. Moreover, as explained in Section \ref{chap:work_intro}, it should produce those outputs using image segmentation and machine learning. As far as the segmentation is concerned, genericity is usually hard to obtain because of the high variability of images across different problems. In order to ensure that the workflow remains generic enough, a particular segmentation procedure is not imposed to the implementer who is expected to provide one that suits the problem. The same goes for the classification models used for predicting the labels of the objects. 
@@ -29,11 +29,12 @@ In the subsequent sections, some additional operators are defined and used to bu
 Segmentation is the first operation applied to the image. This step of the algorithm is where the detection is actually carried out:
  
 \begin{definition} \label{def:segmentation_op}
-Let $\mathcal{S}$ be the \textbf{segment} operator. It is applied to an image $\mathcal{I}$ and produces a binary mask $\mathcal{B}$. The pixel $b_{ij}$ of $\mathcal{B}$ is 1 if the pixel $p_{ij}$ of $\mathcal{I}$ is located in an object of interest, otherwise it is 0. Formally:
+Let $\mathcal{S}$ be the \textbf{segment} operator:
 \begin{equation}
 	\label{eqn:operator_segment}
-	\mathcal{S}(\cdot) : \mathcal{I} \rightarrow \mathcal{B}
+	\mathcal{S}(\cdot) : I \rightarrow B \mid \mathcal{I} \mapsto \mathcal{B}
 \end{equation}
+It is applied to an image $\mathcal{I} \in I$ and produces a binary mask $\mathcal{B} \in B$ with $B$ being the set of all possible binary masks. The pixel $b_{ij}$ of $\mathcal{B}$ is 1 if the pixel $p_{ij}$ of $\mathcal{I}$ is located in an object of interest, otherwise it is 0.
 \end{definition}
 
 While the segmented image theoretically contains the necessary information about the detected objects (i.e. shape and position in the image), the format of this information is inconvenient to query mostly because it is embedded into the binary mask and a single object cannot be trivially extracted. An intermediate step that would convert this information into a more convenient format is therefore needed. This format should encode both the shape of the object and its position in the image. It appears that polygons match this specification. 
@@ -42,10 +43,10 @@ While the segmented image theoretically contains the necessary information about
 Let $\mathcal{L}$ be the \textbf{location} operator. It is applied to a binary mask and produces a set of polygons encoding the shapes and positions of every object in the image. Formally:
 
 \begin{equation}
-	\mathcal{L}(\cdot) : \mathcal{B} \rightarrow \left\{P_1, ..., P_N\right\}
+	\mathcal{L}(\cdot) : B \rightarrow H^N \mid \mathcal{B} \mapsto \left\{P_1,  ..., P_N\right\}, N \in \mathbb{N}_0
 \end{equation}
 
-where $\mathcal{B}$ is a binary mask as defined in Definition \ref{def:segmentation_op}, $N$ is the number of objects of interest in $\mathcal{B}$ and $P_i$ is the polygon representing the geometrical contour of the $i^{th}$ object in $\mathcal{B}$.
+where $\mathcal{B}$ is a binary mask as defined in Definition \ref{def:segmentation_op}, $N$ is the number of objects of interest in $\mathcal{B}$ and $P_i$ is the polygon representing the geometrical contour of the $i^{th}$ object in $\mathcal{B}$. This polygon belongs to the set $H$ of all possible polygons.
 \end{definition}
 
 The final step of the workflow is the object classification and is performed by a classifier which is passed a representation of the object (e.g. image, geometrical information,...) and produces a classification label. In this theory, there is no restriction about the nature or representation of the objects processed by the classifiers.
@@ -53,31 +54,31 @@ The final step of the workflow is the object classification and is performed by 
 \begin{definition} \label{def:classif_op}
 Let $\mathcal{T}$ be the \textbf{classifier} operator. It is applied to an object of interest and produces a classification label. Formally:
 \begin{equation}
-	\mathcal{T}(\cdot) : o \rightarrow C
+	\mathcal{T}(\cdot) : O \rightarrow L \mid o \mapsto C
 \end{equation}
-where $o$ is the object and $C$, the classification label. 
+where $O$ is the set of all possible objects ($o \in O$) and $L$, the set of all possible classification labels ($C \in L$). 
 \end{definition}
 \begin{definition}
 Let $\mathcal{T}^*$ be an extension of $\mathcal{T}$ which is given a set of objects and produces labels for all of them. Formally: 
 \begin{equation}
-	\mathcal{T}^*(\cdot) : \left\{o_1, ..., o_N\right\}  \rightarrow \left\{C_1, ..., C_N\right\}
+	\mathcal{T}^*(\cdot) : O^N \rightarrow L^N \mid \left\{o_1,...,o_N\right\} \mapsto \left\{\mathcal{T}(o_1), ... \mathcal{T}(o_N)\right\}, N \in \mathbb{N}_0
 \end{equation}
 \end{definition}
 
 \subsection{Single segmentation, single classifier}
 \label{ssec:single_single}
 
-The most simple construction of $\mathcal{W}$ would be the composition of the operators defined in Section \ref{ssec:other_operators}. Particularly, the compositions $\mathcal{S} \circ \mathcal{L}$ and $\mathcal{S} \circ \mathcal{L} \circ \mathcal{T}^*$ would respectively produce the polygons representing the objects and and their labels. This construction is summarized in Algorithm \ref{algo:single_seg_single_classif}: 
+The most simple construction of $\mathcal{W}$ would be the composition of the operators defined in Section \ref{ssec:other_operators}. Particularly, the compositions $\mathcal{S} \circ \mathcal{L}$ and $\mathcal{S} \circ \mathcal{L} \circ \mathcal{T}^*$ would respectively produce the polygons representing the objects and their labels. This construction is summarized in Algorithm \ref{algo:single_seg_single_classif}: 
 
 \begin{algorithm} \label{algo:single_seg_single_classif} 
 	Construction of $\mathcal{W}$ using one segmentation and one classifier:
 	
 	\begin{enumerate}
-		\item Return $\left(\mathcal{S} \circ \mathcal{L}\right)\left(\mathcal{I}\right) \times \left(\mathcal{S} \circ \mathcal{L} \circ \mathcal{T}^*\right)\left(\mathcal{I}\right)$
+		\item Return $\left\langle\left(\mathcal{S} \circ \mathcal{L}\right)\left(\mathcal{I}\right) , \left(\mathcal{S} \circ \mathcal{L} \circ \mathcal{T}^*\right)\left(\mathcal{I}\right)\right\rangle$
 	\end{enumerate}
 \end{algorithm}
 
-As explained in Section \ref{ssec:workflow_algo}, the definition of $\mathcal{S}$ and $\mathcal{T}^*$ would be left at the implementer's hands. As far as the $\mathcal{L}$ operator is concerned, it could be imposed by the workflow without loss of genericity provided that the bitmap format is defined. Such a construction of $\mathcal{W}$ could already solve any object detection and classification problem on image in which the labels can be predicted by a single classifier. However, in some cases, one classifier is not enough. This happen, for instance, when the image contains objects of very different nature and using several classifiers would yield better results than using a single one. An extension is therefore needed.
+As explained in Section \ref{ssec:workflow_algo}, the definition of $\mathcal{S}$ and $\mathcal{T}^*$ would be left at the implementer's hands. As far as the $\mathcal{L}$ operator is concerned, it could be imposed by the workflow without loss of genericity provided that the binary mask format is defined. Such a construction of $\mathcal{W}$ could already solve any object detection and classification problem on image in which the labels can be predicted by a single classifier. However, in some cases, one classifier is not enough. This happen, for instance, when the image contains objects of very different nature and using several classifiers would yield better results than using a single one. An extension is therefore needed.
 
 \subsection{Single segmentation, several classifiers}
 \label{ssec:single_several}
@@ -88,7 +89,7 @@ In this attempt to construct a generic $\mathcal{W}$ operator, the image is assu
 	Let $\mathcal{D}$ be the dispatch operator. It is applied to a polygon and produces an integer which identifies the most appropriate classifier for processing this polygon: 
 
 	\begin{equation}
-		\mathcal{D}(\cdot) : P \rightarrow i, i \in \{1,...,M\}
+		\mathcal{D}(\cdot) : H \rightarrow \{1,...,M\}
 	\end{equation}
 \end{definition}
 
@@ -97,7 +98,7 @@ This step being problem dependent, it is the responsibility of the implementer t
 \begin{definition} 
 	Let $\mathcal{P}$ be a set of $M$ predicates $p_1, ..., p_M$ which associate truth values to polygons:
 	\begin{equation}
-		p_i(\cdot) : P \rightarrow t \in \{true, false\}, i \in \left\{1,...,M\right\} 
+		p_i(\cdot) : H \rightarrow \left\{true, false\right\} \mid P \mapsto t, i \in \left\{1,...,M\right\} 
 	\end{equation}
 	where $p_i$ is the predicate associated with the $i^{th}$ classifier. The polygon $P$ is dispatched to a classifier $\mathcal{T}_i$ if $p_i$ associates true to this polygon. To avoid dispatching an object to several classifiers, the predicates should verify the following property:
 	\begin{equation}
@@ -143,7 +144,7 @@ To handle the case when some objects are included in others, a solution consists
 While $\mathcal{W}_1$ would be applied to the full image $\mathcal{I}$ to extract all the objects of interest, $\mathcal{W}_2, ..., \mathcal{W}_K$ would only be passed image windows containing the previously detected objects. Given those windows, they would have to detect the objects of interest included in the objects found by $\mathcal{W}_1$. 
 
 \begin{definition}\label{def:image_window}
-	Let $\mathcal{I}_P$ be an image window extracted from image $\mathcal{I}$ and containing the object represented by polygon $P$. The window is the minimum bounding box containing this polygon.
+	Let $\mathcal{I}_P \in I$ be an image window extracted from image $\mathcal{I}$ and containing the object represented by polygon $P$. The window is the minimum bounding box containing this polygon.
 \end{definition}
 
 A further refinement would be to provide a way for the implementer to filter the polygons of which the windows are passed to a given workflow instance. Indeed, a given instance $\mathcal{W}_i$ might be designed to process only a certain category of objects and therefore should not be passed windows of objects that doesn't fall in this category. 
@@ -152,7 +153,7 @@ A further refinement would be to provide a way for the implementer to filter the
 	Let $\mathcal{F}$ be the $\textbf{filter}$ operator. It is given a set of polygons $S_P$ and returns a subset $S'_P$ of polygons:
 	
 	\begin{equation}
-		\mathcal{F}(\cdot): S_P \rightarrow S'_P, S'_P \subseteq S_P
+		\mathcal{F}(\cdot): H^N \rightarrow H^M, N, M \in \mathbb{N}, M \geq N
 	\end{equation}
 \end{definition}
 
@@ -162,12 +163,12 @@ Each instance of the workflow $\mathcal{W}_i$ except $\mathcal{W}_1$ is therefor
 	Construction of the $\mathcal{W}$ operator with $K$ instances of Algorithm \ref{algo:single_seg_several_classif}:
 
 	\begin{enumerate}
-		\item Execute the first workflow and save the results in the results set $R$: $R \leftarrow \mathcal{W}_1(\mathcal{I})$
+		\item Execute the first workflow and save the results in the result set $R$: $R \leftarrow \mathcal{W}_1(\mathcal{I})$
 		\item Create the polygons set and initializes it with the polygons found from the execution of $\mathcal{W}_1$: $S_P \leftarrow \left\{P_{1,1}, ..., P_{1,N}\right\}$
 		\item For each $i \in \{2, ..., K\}$:
 		\begin{enumerate}
 			\item Extract polygons to be processed by $\mathcal{W}_i$: $S'_P \leftarrow \mathcal{F}_i(S_P)$
-			\item For polygon $P \in S'_P$:
+			\item For each polygon $P \in S'_P$:
 			\begin{enumerate}
 				\item Execute workflow $\mathcal{W}_i$ on the image window and saves the results: $R \leftarrow R \cup \mathcal{W}_i(\mathcal{I}_P)$
 				\item Add the extracted polygons to the polygons set: $S_P \leftarrow S_P \cup \left\{P_{i,1}, ..., P_{i,M_i}\right\}$
@@ -191,7 +192,7 @@ This section aims at presenting the implementation of the workflow formalized in
 \label{ssec:work_init_impl}
 As explained in this chapter's introduction, a first version of the workflow was implemented in 2015. However, in the context of this thesis, the decision was made to re-implement it for various reasons.
 
-A major issue was the presence of a software component called a \textit{datastore} which had to be defined by the implementer for each distinct application of the workflow. In addition to be a dependency of almost every other class of the framework, it actually forced the implementer to define workflow execution and chaining logic himself although this logic is obviously not problem dependent and could be encapsulated. The major consequence of this design was an increased workload for the implementer to apply the framework to a custom objects detection and classification problem. Moreover, the datastore being tightly coupled with other classes, it made writing automated tests quite difficult. Reproducing bugs was even harder because the replication implied to restore the datastore state which was not trivial. 
+A major issue was the presence of a software component called a \textit{datastore} which had to be defined by the implementer for each distinct application of the workflow. In addition to be a dependency of almost every other class of the framework, it actually forced the implementer to define workflow execution and chaining logic himself although this logic is obviously not problem dependent and could be encapsulated. The major consequence of this design was an increased workload for the implementer to apply the framework to a custom object detection and classification problem. Moreover, the datastore being tightly coupled with other classes, it made writing automated tests quite difficult. Reproducing bugs was even harder because the replication implied to restore the datastore state which was not trivial. 
 
 Another issue with the previous implementation was its too high level of genericity. Most of the components of the framework were defined as abstract classes and interfaces to be derived or implemented by the implementer. This made the framework hardly understandable and difficult to apply as he had to define more than just problem dependent components. In some cases, some implementations were provided but they only increased the complexity of the framework. Indeed, it was not clear whether those classes could be used directly or whether the implementer should provide his own classes.
 
@@ -203,7 +204,7 @@ All in all, it was decided to re-implement the framework to get rid of the flawe
 \label{ssec:work_requirements}
 The main requirements for the framework are listed hereafter.
 
-\paragraph{Genericity} As for the algorithm, the framework should be able to solve the widest possible range of objects detection and classification problems in any context. This property has more implication in the case of the framework design than for the algorithm design, especially when it comes to fixing the representation of the various involved data types (i.e. image, polygon,...).
+\paragraph{Genericity} As for the algorithm, the framework should be able to solve the widest possible range of object detection and classification problems in any context. This property has more implication in the case of the framework design than for the algorithm design, especially when it comes to fixing the representation of the various involved data types (i.e. image, polygon,...).
 
 \paragraph{Efficiency} While the framework has no control over the efficiency of the algorithms defined by the implementer (i.e. segmentation or classification procedures), the coordination of those algorithms should not induce a significant overhead in the overall execution. 
 
@@ -211,7 +212,7 @@ The main requirements for the framework are listed hereafter.
 
 \paragraph{Robustness} The framework should be robust to errors. That is, a single error should not interrupt the whole execution. For instance, if the framework executes a set of independent computations and one of them fails, it should only be stopped if this failure is unrecoverable and affects all the other computations. Otherwise, the failure should be reported and those others computations should execute until completion. 
 
-\paragraph{Transparency} The framework should provide a built-in way to communicate its progress, the duration of each steps as well as the errors it encounters with the user. The level of verbosity of this communication tool should be adjustable. Moreover, all the relevant information generated by the framework should be made available to the implementer in a structured and convenient way.
+\paragraph{Transparency} The framework should provide a built-in way to communicate its progress, the duration of each step as well as the errors it encounters with the user. The level of verbosity of this communication tool should be adjustable. Moreover, all the relevant information generated by the framework should be made available to the implementer in a structured and convenient way.
 
 \paragraph{Parallelism} Whenever possible the framework should take advantage of parallelism to reduce its execution time but the implementer should be given a way to switch to sequential execution. Moreover, the implementer should be able to adjust the level of parallelism (i.e. the number of available processors).
 
@@ -221,7 +222,7 @@ The main requirements for the framework are listed hereafter.
 \label{ssec:work_language}
 The first choice occurring in the development of an existing algorithm is obviously the language in which it will be implemented. As far as the workflow is concerned, the chosen language was Python. Indeed, this language provides a simple, accessible and complete environment for solving the kind of problems addressed by the framework and would therefore contribute to the overall ease of use the framework. 
 
-First of all, the language has many features which allows developers to quickly come up with solutions to problems. Especially, it is strongly and dynamically typed, multi-paradigm (imperative, functional, object oriented,...), interactive (it can be used in an interactive console), interpreted and garbage-collected. It also support usual data structures such as lists, arrays, dictionaries and sets natively and provide operations for manipulating them in a concise way. 
+First of all, the language has many features which allows developers to quickly come up with solutions to problems. Especially, it is strongly and dynamically typed, multi-paradigm (imperative, functional, object oriented,...), interactive (it can be used in an interactive console), interpreted and garbage-collected. It also supports usual data structures such as lists, arrays, dictionaries and sets natively and provides operations for manipulating them in a concise way. 
 
 In addition to its built-in features, Python has become a great language for scientific computing as it has been augmented with excellent open source libraries over the years. First, the SciPy ecosystem which includes the SciPy \cite{oliphant:2007} and NumPy \cite{vanderwalt:2011} libraries. The first is a collection of numerical algorithms and domain-specific toolboxes (signal processing, optimization, statistics,...). The second is a fundamental package for numerical computations which provides an efficient representation of multi-dimensional arrays and operations on them. Built on top of the SciPy ecosystem comes Scikit-Learn \cite{pedregosa:2011}, a library that provides simple, efficient and reusable tools for data mining and machine learning. Image processing is not outdone with a Python binding for the huge OpenCV library \cite{opencv_library}. Two alternatives are scikit-image \cite{scikit-image} which is built on top of the SciPy ecosystem or the Pillow library \cite{pillow}. All of them provide a collection of well-known image processing algorithms. Another useful library is Shapely \cite{shapely} which provides a representation for geometrical objects (e.g. polygons) and operations on them. 
 
@@ -239,7 +240,7 @@ The representation should also provide a way of extracting sub-windows from an i
 
 The abstract image representation and related classes were implemented into the \texttt{sldc.image} package presented in the UML diagram shown in Figure \ref{fig:uml_image_package}.
 
-The \texttt{Image} class is the abstract image representation mentioned above. It provides three abstract methods for checking image dimensions (width, height and number of channels) and a fourth one, \texttt{np\_image}, which should implement the conversion between the implementor's custom image format and the concrete format mentioned above. NumPy multi-dimensional arrays were chosen to be this concrete representation. In addition to the inherent advantage of using the NumPy library, this choice was also motivated by the fact that those arrays are compatible with the various image processing libraries presented in Section \ref{ssec:work_language}. 
+The \texttt{Image} class is the abstract image representation mentioned above. It provides three abstract methods for checking image dimensions (width, height and number of channels) and a fourth one, \texttt{np\_image}, which should implement the conversion between the implementer's custom image format and the concrete format mentioned above. NumPy multi-dimensional arrays were chosen to be this concrete representation. In addition to the inherent advantage of using the NumPy library, this choice was also motivated by the fact that those arrays are compatible with the various image processing libraries presented in Section \ref{ssec:work_language}. 
 
 An image window is materialized by the \texttt{ImageWindow} class of which the design is based on the decorator pattern. It stores information about the position and size of the window as well as a reference to the parent image. Especially, location and size are respectively represented by coordinates of the first top left pixel included in the window (coordinates are referenced to the top left corner of the parent image) and by the window width and height. As an image window instance provides a level of indirection on top of another image, some methods are provided to fetch this base image as well as the absolute offset\footnote{The absolute offset is the offset of the window referenced to the base image's top left pixel. It is different from the image window offset if its parent image is also an image window.}.
 
@@ -284,7 +285,7 @@ As stated in Section \ref{ssec:single_single}, this operation can be fixed by th
 \label{sssec:merging}
 The need for a merging phase is a consequence of the image division in tiles and its goal is to merge distinct polygons that actually represent a same object of interest. The main idea behind the algorithm was imagined by ?? JM Begon ??. It consists in building a graph where each node corresponds to a polygon. The algorithm will then add edges between polygons which correspond to a same object. Two polygons represent a same object if the distance between them (i.e. minimum distance between one point of each polygon) is less then a certain tolerance threshold. Generating the final polygons is as simple as finding all the connected components of this graph and computing the intersection of all the polygons in those components. 
 
-While working in some cases, the implementation made by Jean-Michel Begon could be improved. First, the interface of the class was inconvenient to use. Indeed, the tiles and their polygons had to be provided in a fixed order (i.e. increasing order of identifiers). And if they weren't, the merging would fail. Moreover, it had issues with some edge cases. For instance, with small images containing few tiles. For those reasons, the algorithm was kept but was completely reimplemented to take advantage of the \texttt{TileTopology} object (which didn't exist in the previous implementation of the workflow). 
+While working in some cases, the implementation made by Jean-Michel Begon could be improved. First, the interface of the class was inconvenient to use. Indeed, the tiles and their polygons had to be provided in a fixed order (i.e. increasing order of identifiers). And if they weren't, the merging would fail. Moreover, it had issues with some border cases. For instance, with small images containing few tiles. For those reasons, the algorithm was kept but was completely reimplemented to take advantage of the \texttt{TileTopology} object (which didn't exist in the previous implementation of the workflow). 
 
 The classes related to merging were defined in the package \texttt{sldc.merger}. The main logic of the algorithm was implemented in a class called \texttt{Merger}. Applying a merge is as simple as passing a tile topology as well a the tiles and associated polygons to the \texttt{merge} method which return the list of merged polygons. The \texttt{Merger} class is Shown in Figure \ref{fig:uml_pack_seg_merg_loc_classif}.
 
@@ -292,7 +293,7 @@ The classes related to merging were defined in the package \texttt{sldc.merger}.
 \label{sssec:dispatch}
 As defined in Section \ref{ssec:single_several}, the dispatching of polygons to classifiers is performed using predicates. Those predicates are materialized by the abstract class \texttt{DispatchingRule} in package \texttt{sldc.dispatcher}. The implementer can extend to define its custom dispatching logic. Especially, this is done by implementing the method \texttt{evaluate\_batch} which is passed both a list of polygons to dispatch as well as the image from which they were extracted. Passing both the polygons and the image allows the implementer to define a dispatching logic based on either the polygons geometrical properties, or the polygons crops, or both.  
 
-The same philosophy was followed for classification. The implementer has to extend the abstract class \texttt{PolygonClassifier} from package \texttt{sldc.classifier} (see Figure \ref{fig:uml_pack_seg_merg_loc_classif}). For the same reason as for the \texttt{evaluate\_batch} method, the \texttt{predict\_batch} methods takes as parameters a set of polygons and the image they were extracted from. Although only a label is produced by the classifier operator in Definition \ref{def:classif_op}, an additional element is returned by the \texttt{predict\_batch} method: the class probability (i.e. the probability that the predicted label is indeed the label of the object). Indeed, this information can sometimes be extracted using some classifiers (e.g. tree based machine learning methods). However, it can happen that the underlying classifier is not able to generate those probabilities. In this case, the implementer is advised to return a probability 1 for each polygon. The class \texttt{PolygonClassifier} is shown in Figure \ref{fig:uml_pack_seg_merg_loc_classif}.
+The same philosophy was followed for classification. The implementer has to extend the abstract class \texttt{PolygonClassifier} from package \texttt{sldc.classifier} (see Figure \ref{fig:uml_pack_seg_merg_loc_classif}). For the same reason as for the \texttt{evaluate\_batch} method, the \texttt{predict\_batch} methods takes as parameters a set of polygons and the image they were extracted from. Although only a label is produced by the classifier operator in Definition \ref{def:classif_op}, an additional element is returned by the \texttt{predict\_batch} method: the class probability (i.e. the probability that the predicted label is indeed the label of the object). Indeed, this information can sometimes be extracted using some classifiers (e.g. tree based methods). However, it can happen that the underlying classifier is not able to generate those probabilities. In this case, the implementer is advised to return a probability 1 for each polygon. The class \texttt{PolygonClassifier} is shown in Figure \ref{fig:uml_pack_seg_merg_loc_classif}.
 
 While the dispatching and classification logic are problem dependent, the coordination of those steps is obviously not and is implemented in class \texttt{DispatcherClassifier} (see Figure \ref{fig:uml_dispatcher_classifier}). This object must be initialized with a set of classifiers and dispatching rules. Some polygons can then be dispatched and classified by passing them to the methods \texttt{dispatch\_classify} or \texttt{dispatch\_classify\_batch}. Especially, the first will execute the operation on a single polygon while the second allows to process a set of polygons. 
 
@@ -399,16 +400,17 @@ At the workflow level, both dispatching and classification parallelization were 
 
 The parallelization itself is handled in the \texttt{SLDCWorkflow} class. In order to reuse the same pool of processes for every call of the \texttt{execute} method, this pool must be passed to the constructor of the workflow object as a \texttt{joblib.Parallel} object. In order to provide more feedback about progress to the user in the sequential case, two implementations of segmentation and location were made. Therefore, the workflow switches to one or another implementation according to the number of jobs specified by the user. The parallel implementation first splits the tiles in batches and then submits them to the various processes using the pool. After that, it aggregates the returned data. Especially, in addition to the found polygons, each process returns a \texttt{WorkflowTiming} object containing the loading, segmentation and location times it recorded when processing its assigned tiles. Those objects are merged with the \texttt{WorkflowTiming} to be returned by the \texttt{execute} method.
 
-To avoid any concurrency problems, all classes of the framework were developed to be thread safe. This was done by making those classes immutable whenever possible or by avoiding to use shared resource. The only classes which couldn't verify this rule are \texttt{WorkflowTiming}, \texttt{StandardOutputLogger} and \texttt{FileLogger}. The timing objects can indeed be updated with new time recordings after their creation. The loggers by their nature access shared resources (e.g. standard output, files,...). To prevent any problem, the \texttt{Logger} was added a lock object to synchronize the call to the \texttt{\_print} abstract method which actually implements the submission of the message to the resource.
+To avoid any concurrency problems, all classes of the framework were developed to be thread safe. This was done by making those classes immutable whenever possible or by avoiding to use shared resource. The only classes which couldn't verify this rule are \texttt{WorkflowTiming}, \texttt{StandardOutputLogger} and \texttt{FileLogger}. The timing objects can indeed be updated with new time recordings after their creation. The loggers by printing log messages access shared resources (e.g. standard output, files,...). To prevent any problem, the \texttt{Logger} was added a lock object to synchronize the call to the \texttt{\_print} abstract method which actually implements the submission of the message to the resource.
 
 \subsection{Testing}
+\label{ssec:work_test}
 In order to ensure that the various components of the framework are working as expected in some predefined conditions and to prevent those components to be broken by further refactoring, some tests were written using the \texttt{unittest} package of Python. Those tests can also be found on GitHub in the folder \texttt{tests}. 
 
 The tests were focused on components containing actual logic, that is, the classes \texttt{Locator}, \texttt{DispatcherClassifier}, \texttt{Merger} and \texttt{TileTopology}. The workflow construction and execution was also tested on two use cases. The first is presented in Section \ref{ssec:work_toy_example} and the second consists in finding a big white circle in a image with black background. Finally, there are fifteen tests and they yield a code coverage of 72 \%.\\
 
 \subsection{Toy example}
 \label{ssec:work_toy_example}
-Now that the implementation was presented and detailed, this Section aims at highlighting how easy it is to apply the framework to solve a problem. The problem in question is very simple and consists in finding grey and white squares and circles within a greyscale image with a black background (see in Figure \ref{fig:toy_example}). In addition to locate the shapes, the algorithm should return the information about whether a shape is a circle or a square and also return a label indicating its color (grey or white). 
+Now that the implementation was presented and detailed, this section aims at highlighting how easy it is to apply the framework to solve a problem. The problem in question is very simple and consists in finding grey and white squares and circles within a greyscale image with a black background (see in Figure \ref{fig:toy_example}). In addition to locate the shapes, the algorithm should return the information about whether a shape is a circle or a square and also return a label indicating its color (grey or white). 
 
 To apply the workflow philosophy, the implementer should first encapsulate its image custom format in a class extending \texttt{Image}. For this example, a simple NumPy array can be used to represent the image. The definition of the image class is given in Listing \ref{lst:toy_image}. The next component to be defined is the segmentation algorithm that will actually detects the objects. In this case, this algorithm can be implemented using a simple thresholding (every pixel of which the value is greater than 0 belongs to an object). This logic should be defined in a class implementing the \texttt{Segmenter} interface. The definition of this class is shown in Listing \ref{lst:toy_segment}. Thanks to the usage of NumPy arrays, the implementation of the segmentation is really concise. 
 
@@ -482,6 +484,13 @@ class ColorClassifier(PolygonClassifier):
                 classes.append(None)
         return classes, [1.0] * len(polygons)
 
+\end{python}
+
+\begin{python}[language=python,label={lst:toy_segment},caption={Toy example - Segmentation implementation}] 
+class CustomSegementer(Segmenter):
+    """Every non black pixel are in an object of interests"""
+    def segment(self, image):
+        return (image > 0).astype("uint8")
 \end{python}
 
 \begin{python}[language=python,label={lst:toy_build_and_call},caption={Toy example - Applying the framework}] 
