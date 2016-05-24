@@ -1,0 +1,12 @@
+\label{app:random_subwindows}
+Random subwindows \cite{Maree201617} is an image classification algorithm. The first step of the algorithm consists in transforming the $N$ input images. This is done by extracting a set of $N_w$ random subwindows from each image. A random subwindow is a square patch of random size extracted at a random position in an image. The extracted windows are then resized to a fixed size patch $(w, h)$. Those transformation operations generates a dataset containing $N\times N_w$ objects and $w \times h$ attributes. 
+
+The second step consists in passing this dataset to a classifier which will actually predict the image's classification label from those subwindows. In \cite{Maree201617}, two classification methods are proposed.
+
+The first uses extremely randomized trees \cite{Geurts2006} as direct classifier: that is, each window is predicted a label and the full image label is determined by a majority vote over the predicted classes of this image's windows.
+
+The second variant uses extremely randomized trees as feature learner rather than a direct classifier and relies on a SVM classifier to produce the prediction. 
+In this variant each image is represented as a vector of which the dimensionality equals the number of terminal nodes in the ensemble of randomized trees and where the $i^{th}$ feature is the number of windows that reached the $i^{th}$ leaf node of the forest divided by the total number of windows. This vector is then passed to the SVM classifier to predict the image classification label.
+
+
+
