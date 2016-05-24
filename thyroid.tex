@@ -22,7 +22,7 @@ The workflow developed by Antoine Deblire in \cite{adeblire2013} is summarized i
 
 \begin{figure}
 	\center
- 	\includegraphics[scale=0.95]{image/adeblire_workflow.png}
+	\includegraphics[scale=0.95]{image/adeblire_workflow.png}
 	\caption{Antoine Deblire's workflow (source: \cite{adeblire2013})}
 	\label{fig:workflow_adeblire}
 \end{figure}
@@ -32,26 +32,26 @@ The first segmentation procedure was designed for processing the whole slide and
 
 \begin{figure}
 	\center
-%	\subfigure{
-%		\includegraphics[scale=0.5]{image/slide_segmentation_0_in.png}
-%		\includegraphics[scale=0.5]{image/slide_segmentation_0_out.png}
-%		\includegraphics[scale=0.5]{image/slide_segmentation_0_masked.png}
-%	} \\
-%	\subfigure{
-%		\includegraphics[scale=0.5]{image/slide_segmentation_1_in.png}
-%		\includegraphics[scale=0.5]{image/slide_segmentation_1_out.png}
-%		\includegraphics[scale=0.5]{image/slide_segmentation_1_masked.png}
-%	} \\
-%	\subfigure{
-%		\includegraphics[scale=0.5]{image/slide_segmentation_2_in.png}
-%		\includegraphics[scale=0.5]{image/slide_segmentation_2_out.png}
-%		\includegraphics[scale=0.5]{image/slide_segmentation_2_masked.png}
-%	} \\
-%	\subfigure{
-%		\includegraphics[scale=0.5]{image/slide_segmentation_3_in.png}
-%		\includegraphics[scale=0.5]{image/slide_segmentation_3_out.png}
-%		\includegraphics[scale=0.5]{image/slide_segmentation_3_masked.png}
-%	}
+	\subfigure{
+		\includegraphics[scale=0.5]{image/slide_segmentation_0_in.png}
+		\includegraphics[scale=0.5]{image/slide_segmentation_0_out.png}
+		\includegraphics[scale=0.5]{image/slide_segmentation_0_masked.png}
+	} \\
+	\subfigure{
+		\includegraphics[scale=0.5]{image/slide_segmentation_1_in.png}
+		\includegraphics[scale=0.5]{image/slide_segmentation_1_out.png}
+		\includegraphics[scale=0.5]{image/slide_segmentation_1_masked.png}
+	} \\
+	\subfigure{
+		\includegraphics[scale=0.5]{image/slide_segmentation_2_in.png}
+		\includegraphics[scale=0.5]{image/slide_segmentation_2_out.png}
+		\includegraphics[scale=0.5]{image/slide_segmentation_2_masked.png}
+	} \\
+	\subfigure{
+		\includegraphics[scale=0.5]{image/slide_segmentation_3_in.png}
+		\includegraphics[scale=0.5]{image/slide_segmentation_3_out.png}
+		\includegraphics[scale=0.5]{image/slide_segmentation_3_masked.png}
+	}
 	\caption{First segmentation - examples}
 	\label{fig:first_seg_examples}
 \end{figure}
@@ -60,26 +60,26 @@ The second segmentation procedure is applied to the architectural patterns and w
 
 \begin{figure}
 	\center
-%	\subfigure{
-%		\includegraphics[scale=0.33]{image/aggr_segment_12_in.png}
-%		\includegraphics[scale=0.33]{image/aggr_segment_12_out.png}
-%		\includegraphics[scale=0.33]{image/aggr_segment_12_masked.png}
-%	} \\
-%	\subfigure{
-%		\includegraphics[scale=0.33]{image/aggr_segment_2_in.png}
-%		\includegraphics[scale=0.33]{image/aggr_segment_2_out.png}
-%		\includegraphics[scale=0.33]{image/aggr_segment_2_masked.png}
-%	} \\
-%	\subfigure{
-%		\includegraphics[scale=0.33]{image/aggr_segment_5_in.png}
-%		\includegraphics[scale=0.33]{image/aggr_segment_5_out.png}
-%		\includegraphics[scale=0.33]{image/aggr_segment_5_masked.png}
-%	} \\
-%	\subfigure{
-%		\includegraphics[scale=0.33]{image/aggr_segment_7_in.png}
-%		\includegraphics[scale=0.33]{image/aggr_segment_7_out.png}
-%		\includegraphics[scale=0.33]{image/aggr_segment_7_masked.png}
-%	}
+	\subfigure{
+		\includegraphics[scale=0.33]{image/aggr_segment_12_in.png}
+		\includegraphics[scale=0.33]{image/aggr_segment_12_out.png}
+		\includegraphics[scale=0.33]{image/aggr_segment_12_masked.png}
+	} \\
+	\subfigure{
+		\includegraphics[scale=0.33]{image/aggr_segment_2_in.png}
+		\includegraphics[scale=0.33]{image/aggr_segment_2_out.png}
+		\includegraphics[scale=0.33]{image/aggr_segment_2_masked.png}
+	} \\
+	\subfigure{
+		\includegraphics[scale=0.33]{image/aggr_segment_5_in.png}
+		\includegraphics[scale=0.33]{image/aggr_segment_5_out.png}
+		\includegraphics[scale=0.33]{image/aggr_segment_5_masked.png}
+	} \\
+	\subfigure{
+		\includegraphics[scale=0.33]{image/aggr_segment_7_in.png}
+		\includegraphics[scale=0.33]{image/aggr_segment_7_out.png}
+		\includegraphics[scale=0.33]{image/aggr_segment_7_masked.png}
+	}
 	\caption{Second segmentation - examples}
 	\label{fig:second_seg_examples}
 \end{figure}
@@ -87,7 +87,7 @@ The second segmentation procedure is applied to the architectural patterns and w
 While the presented segmentation procedures exhibit some flaws, they were considered acceptable to test the \textit{SLDC} framework.
 
 \subsection{Dispatching procedure}
-
+\label{ssec:thyroid_ad_dispatch}
 The step (4.4) consists in dispatching detected objects into four categories: artefacts, cells, clusters and patterns. The categories \textit{artefact} and \textit{cluster} respectively correspond to irrelevant objects and to groups of cells that contains too few of them to be patterns. Even if the author distinguishes patterns and clusters at the dispatching step, objects of both categories are treated equally in the subsequent steps of the algorithm. That is, they are first evaluated by the pattern classifier (for assessing whether they are proliferative or not) and they then are re-segmented. The dispatching is based on four parameters, the cell minimum and maximum areas (respectively, $A_{min}$ and $A_{max}$), the cell minimum circularity $C_{min}$ and the minimum number of cells per pattern $N_{min}$. The values of those parameters are given in Table \ref{tab:adeb_disp_rules}. 
 
 Given $A$ the area of the object of interest, the dispatching rules can be summarized as follows:
@@ -127,14 +127,14 @@ The histograms given in Figures \ref{fig:hist_area_cell_vs_pattern} and \ref{fig
 
 \begin{figure}
 	\center
- 	\includegraphics[scale=0.75]{image/cells_patterns_real_area_0_5000.png}
+	\includegraphics[scale=0.75]{image/cells_patterns_real_area_0_5000.png}
 	\caption{Area distributions of the experts' annotations.}
 	\label{fig:hist_area_cell_vs_pattern}
 \end{figure}
 
 \begin{figure}
 	\center
- 	\includegraphics[scale=0.75]{image/cells_patterns_circ.png}
+	\includegraphics[scale=0.75]{image/cells_patterns_circ.png}
 	\caption{Circularity distribution of the experts' annotations.}
 	\label{fig:hist_circ_cell_vs_pattern}
 \end{figure}
@@ -167,6 +167,16 @@ Following the \textit{SLDC} framework philosophy, the problem dependent componen
 
 \subsection{Image representation}
 
+The first component to be defined is the actual representation of the images to be processed, that is, the digitized microscope slides stored on the Cytomine platform. This representation is implemented in the \texttt{CytomineSlide} class which stores an \texttt{ImageInstance}\footnote{The \texttt{ImageInstance} class is defined in the Cytomine Python client} object containing all the information about the slide including its width, height and identifier. To prevent anyone from loading the full image into memory, the implementation of the \texttt{np\_image} raises the \texttt{NotImplementedError} exception. 
+
+In general, when the full image can be loaded into memory the default \texttt{Tile} class can be used. In this case, as this operation is impossible, a class \texttt{CytomineTile} was created to handle the tile image loading. Especially, the call to \texttt{np\_image} triggers an HTTP requests to the Cytomine server to fetch the corresponding image window. If the request fails (e.g. HTTP error) or returns an invalid result (e.g. returned image has an invalid size), a \texttt{TileExtractionError} is raised as advised in the documentation. The class \texttt{CytomineTileBuilder} was created to build \texttt{CytomineTile} objects.
+
+In order to reduce the overall execution time of the workflow, it is essential not to execute two times a same HTTP request for loading the image of a tile. To avoid this, the class \texttt{TileCache} was developed. It implements a simple caching policy using the local file system: when an image window is needed, the \texttt{TileCache} object first checks whether this image was already downloaded. If that is the case, the image can be loaded from the disk. Otherwise, the image is fetched by calling the \texttt{np\_image} method of the underlying tile and stored on the disk before being handed back to the caller. The class also provides methods for adding an alpha mask to the returned image. 
+
+Some additional classes were developed to handle the addition of an alpha mask to an image window (class \texttt{CytomineMaskedWindow}) and to a tile (classes \texttt{CytomineMaskedTile} and \texttt{CytomineMaskedTileBuilder}). This feature is needed for the pattern segmentation procedure which assumes that an alpha mask indicating the position of the pattern is passed with the numpy array. To avoid storing an image representing the alpha mask into the classes, the mask is represented by a polygon. 
+
+The UML diagram of the package containing the image related classes is shown in Figure \ref{fig:uml_cyto_im_repr}.
+
 \begin{figure}
 	\center
 	\includegraphics[scale=0.85]{image/thyroid_image.png}
@@ -174,7 +184,36 @@ Following the \textit{SLDC} framework philosophy, the problem dependent componen
 	\label{fig:uml_cyto_im_repr}
 \end{figure}
 
+\subsection{Classifier}
+
+All the classification tasks to perform in the context the thyroid problem are performed using the random subwindows algorithm \cite{Maree201617}. Especially, a Python implementation called Pyxit taken from Cytomine \cite{maree2016collaborative} was used. The central class of this implementation is the \texttt{PyxitClassifier} class which provides an scikit-learn-like interface to the algorithm (i.e. the methods \texttt{fit}, \texttt{transform}, \texttt{predict},...). In order to use this class within the framework, a class \texttt{PyxitClassifierAdapter} was developed. The \texttt{predict\_batch} method is implemented as follows.
+
+ First, the crops of the polygons passed to the method are fetched and stored on the disk using a \texttt{TileCache} (thanks to the cache, the HTTP request is only executed the first time the crops are requested). Because there can be a lot of polygons, the fetching of the crops is parallelized and the number of available processes can be specified at the construction of the \texttt{PyxitClassifierAdapater} object. Each available process is passed a set of polygons of which the crops must be fetched in order to reduce the serialization overhead (see Section \ref{sssec:work_parallel}). If some crops cannot be fetched whatever the reason, the corresponding polygons are associated a class \texttt{None} and a probability 0. Moreover the user is notified with the logger about the crops that couldn't be fetched.
+
+As Pyxit works with images stored on the disk, a list containing the filepath of the images to classify is generated and passed to the \texttt{\_predict} method. This method implements the generation of the classification labels and probabilities. If a SVM classifier was provided at construction of the \texttt{PyxitClassifierAdapter} object, then the variant of the random subwindows algorithm that uses the extremely randomized trees as feature learner is used. That is, the Pyxit classifier is used to generate the features that are passed to the SVM classifier for predicting the labels. Otherwise, the variant that uses the extremely randomized trees as direct classifier is used. 
+
+Finally, the \texttt{predict\_batch} method aggregates the results returned by the \texttt{\_predict} method with the fake labels and probabilities generated for the polygons of which the crops couldn't be fetched.
+
+A static method is also provided for constructing a \texttt{PyxitClassifierAdapter} object from a serialized Pyxit model. Especially, the method deserializes the \texttt{PyxitClassifier} object as well as the SVM classifier if one is provided and passe them to the adapter's constructor. This method also sets the number of processes to use for fetching the crops. If the number of available processors is less than five, then all of them are used to fetch the crops. Otherwise, five processors are used. This value was chosen in order to avoid overloading Cytomine server when the number of available processors is high.
+
+The UML diagram of the \texttt{PyxitClassifierAdapter} class is shown in Figure \ref{fig:uml_cyto_classifiers}.
+
+\begin{figure}
+	\center
+	\includegraphics[scale=0.85]{image/thyroid_classifiers.png}
+	\caption{UML diagram - Classifier}
+	\label{fig:uml_cyto_classifiers}
+\end{figure}
+
 \subsection{Dispatching rules}
+
+As explained in Section \ref{ssec:thyroid_ad_dispatch}, the chosen dispatching method relies on a classifier of which the predicted class is the dispatching index. Especially, the classifier was built to predict the label 0 for cells, 1 for patterns and 2 for the other objects.
+
+To take advantage of the features provided by the class \texttt{PyxitClassifierAdapter} (i.e. caching, parallel fetching,...), it was reused and encapsulated in two classes extending \texttt{DispatchingRule}. The implementation of the rules' \texttt{evaluate\_batch} method is therefore straightforward. It first calls the \texttt{predict\_batch} method of the classifier adapter object and then generates a list of boolean values according to the returned classification labels. For the first rule, \texttt{CellRule}, \texttt{True} is associated to polygons of which the returned label is 0. For the second, \texttt{AggregateRule}, \texttt{True} is associated with polygons of which the predicted label is 1.
+
+Unfortunately, this organization implies that the polygons marking patterns and other objects will be classified two times by the same classifier. Indeed, because of the dispatching structure imposed by the framework, the polygons that are not matched by the first rule are evaluated by the second. This could be avoided by refactoring the framework or by implementing another dispatching strategy.
+
+The UML diagram containing the dispatching rule classes is shown in Figure \ref{fig:uml_cyto_disp_rules}.
 
 \begin{figure}
 	\center
@@ -185,6 +224,8 @@ Following the \textit{SLDC} framework philosophy, the problem dependent componen
 
 \subsection{Segmentation}
 
+The segmentation procedures were implemented in two classes, \texttt{SlideSegmenter} and \texttt{AggregateSegmenter}. Both implementation were taken from Antoine Deblire's source code. Whereas the slide segmentation could be used almost directly without modification, the recovered aggregate segmentation procedure didn't work. It was therefore re-implemented following the explanations provided in the master thesis as well as the few comments present in the source code. After few tests, it appeared that both segmentation procedures were really slow because of the color deconvolution. Especially, to execute the color deconvolution on a 4 mega-pixels image yielded more than 2 seconds execution time. A first optimization pass was done over the function in order to reduce its execution time to 1 second (same image dimensions). The UML diagram containing the segmenter classes is shown in Figure \ref{fig:uml_cyto_segmenters}.
+
 \begin{figure}
 	\center
 	\includegraphics[scale=0.85]{image/thyroid_segmenters.png}
@@ -192,16 +233,10 @@ Following the \textit{SLDC} framework philosophy, the problem dependent componen
 	\label{fig:uml_cyto_segmenters}
 \end{figure}
 
-\subsection{Classifier}
-
-\begin{figure}
-	\center
-	\includegraphics[scale=0.85]{image/thyroid_classifiers.png}
-	\caption{UML diagram - Classifier}
-	\label{fig:uml_cyto_classifiers}
-\end{figure}
-
 \subsection{Chaining}
+
+The chaining package of the framework must be used to define which detected objects (i.e. the patterns) must be re-segmented. First, an image provider must be defined to generate the \texttt{CytomineSlide} to be processed. This logic is implemented in the \texttt{SlideProvider} class. Then, the selection of the objects to be processed by the second workflow must be defined as a \texttt{WorkflowExecutor}. Especially, the class \texttt{AggregateWorkflowExecutor} was implemented to fulfill this role. The class defines the method \texttt{get\_windows} which implements the selection of objects to be re-segmented and the generation of \texttt{CytomineMaskedWindow} objects to be processed by the second workflow. Moreover, it extends the class \texttt{PolygonTranslatorWorkflowExecutor} because the polygons generated by this phase needs to be translated back into the full image reference system. The final component to be defined is the post processor which is passed all the detected objects and their classes. In the context of the thyroid problem, the post processor should upload the generated polygons and classes as annotations on the Cytomine platform. This logic is implemented in the \texttt{post\_process} method of the \texttt{ThyroidPostProcessor} class. Unfortunately, the Cytomine API doesn't provide any request for uploading annotations by batches and each annotation has to be added with two HTTP requests: one for uploading the geometry and another for uploading the predicted class and associated probability. To avoid waiting for each request to terminates before sending another one, the process was parallelized. The UML diagram containing the chaining classes is shown in Figure \ref{fig:uml_cyto_chaining}.
+
 
 \begin{figure}
 	\center
