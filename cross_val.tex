@@ -1,1 +1,59 @@
-Cross validation
+\label{app:parameters}
+
+This chapter presents the parameters that were tuned by the cross-validation procedure presented in Section \ref{sssec:thyroid_cv}. Each classifier was built using the two variants of the random subwindows algorithm , ET-FL and ET-DIC, and for each variant, the model was learned on two different learning sets: one with the reviewed annotations and one without. The complete lists of parameters are given in Figure \ref{tab:app_disp_classif_tuned} for the dispatching classifier, in Figure \ref{tab:app_cell_classif_tuned} for the cell classifier and in Figure \ref{tab:app_pattern_classif_tuned} for the pattern classifier.
+
+\begin{table}
+	\center 
+	\begin{tabular}{|c|cccc|}
+		\hline
+		Parameters & ET-DIC & ET-DIC (r) & ET-FL & ET-FL (r) \\
+		\hline		
+		\texttt{window size} & \multicolumn{4}{|c|}{(0.3, 0.8), (0.3, 1.0), (0.5, 0.8), (0.5, 1.0)} \\
+		\texttt{colorspace} & \multicolumn{4}{|c|}{HSV, normalized RGB} \\
+		\multirow{2}{*}{\texttt{min\_sample\_split}} & $\{1, 91, 906,$ &  $\{1, 291, 2913$ & \multirow{2}{*}{91} & \multirow{2}{*}{291}\\
+		& $1812, 4530\}$ & $5825, 14563 \}$ & & \\
+		\texttt{max\_features} & \multicolumn{4}{|c|}{$\left\{1, 28, 384, 768\right\}$}\\ 
+		\texttt{C} & / & / & \multicolumn{2}{c|}{$\left\{0.1, 1\right\}$}\\
+		\hline
+	\end{tabular}
+	\caption{Dispatch classifier. Tuned parameters.}
+	\label{tab:app_disp_classif_tuned}
+\end{table}
+
+\begin{table}
+	\center 
+	\begin{tabular}{|c|cccc|}
+		\hline
+		Parameters & ET-DIC & ET-DIC (r) & ET-FL & ET-FL (r) \\
+		\hline		
+		\texttt{window size} & \multicolumn{4}{|c|}{(0.6, 0.7), (0.6, 0.8)} \\
+		\texttt{colorspace} & \multicolumn{4}{|c|}{HSV, normalized RGB} \\
+		\multirow{2}{*}{\texttt{min\_sample\_split}} & $\{1, 108, 1075,$ &  $\{1, 156, 1564$ & \multirow{2}{*}{108} & \multirow{2}{*}{156}\\
+		& $2150, 5375\}$ & $3127, 7818 \}$ & & \\
+		\texttt{max\_features} & \multicolumn{4}{|c|}{$\left\{1, 28, 384, 768\right\}$}\\ 
+		\texttt{C} & / & / & \multicolumn{2}{c|}{$\left\{0.1, 1\right\}$}\\
+		\hline
+	\end{tabular}
+	\caption{Cell classifier. Tuned parameters.}
+	\label{tab:app_cell_classif_tuned}
+\end{table}
+
+
+\begin{table}
+	\center 
+	\begin{tabular}{|c|cccc|}
+		\hline
+		Parameters & ET-DIC & ET-DIC (r) & ET-FL & ET-FL (r) \\
+		\hline		
+		\texttt{window size} & \multicolumn{4}{|c|}{(0.2, 0.4), (0.2, 0.3)} \\
+		\texttt{colorspace} & \multicolumn{4}{|c|}{HSV, normalized RGB} \\
+		\multirow{2}{*}{\texttt{min\_sample\_split}} & $\{1, 67, 675,$ &  $\{1, 76, 756$ & \multirow{2}{*}{91} & \multirow{2}{*}{291}\\
+		& $1349, 3373\}$ & $1511, 3778\}$ & & \\
+		\texttt{max\_features} & \multicolumn{4}{|c|}{$\left\{1, 28, 384, 768\right\}$}\\ 
+		\texttt{C} & / & / & \multicolumn{2}{c|}{$\left\{0.1, 1\right\}$}\\
+		\hline
+	\end{tabular}
+	\caption{Pattern classifier. Tuned parameters.}
+	\label{tab:app_pattern_classif_tuned}
+\end{table}
+
