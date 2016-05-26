@@ -1,24 +1,23 @@
-In this chapter, the \textit{SLDC} framework is applied the problem presented in Chapter \ref{chap:context} : the nodule malignancy assessment. This problem is effectively an instance of the objects detection and classification problem. Indeed, the goal is to diagnose malignancy by the presence or absence of cells or groups of cells having particular characteristics in digitized microscope whole-slide. This problem is a good use case for the \textit{SLDC} framework: the images are large (i.e. typically 15 giga-pixels), two distinct categories of objects must be found (namely cells and groups of cells) and some of these objects can be included into others which can be handled using dispatching and chaining.  
+In this chapter, the \textit{SLDC} framework is applied the problem presented in Chapter \ref{chap:context} : the nodule malignancy assessment. This problem is effectively an instance of the object detection and classification problem. Indeed, the goal is to diagnose malignancy by the presence or absence of cells or groups of cells having particular characteristics in digitized microscope slides. This problem is a good use case for the \textit{SLDC} framework: the images are large (i.e. typically 15 giga-pixels), two distinct categories of objects must be found (namely cells and groups of cells) and some of these objects can be included into others which can be handled using dispatching and chaining.  
 
 An introduction to the thyroid problem as well as the underlying implementation challenges are presented in Section \ref{sec:thyroid_impl_issue}. Then, the workflow developed in \cite{adeblire2013} is briefly presented and its performances are assessed in Section \ref{sec:thyroid_adeblire_algo}. Especially, some flawed steps are highlighted and some improvements are proposed. Then, the implementation of the improved workfow is detailed in section \ref{sec:thyroid_implementation}. Finally, the performances of this implementation are analyzed in Section \ref{sec:thyroid_perf}.
 
 \section{Problem and underlying challenges}
 \label{sec:thyroid_impl_issue}
-The problem consists in finding cells with inclusions and proliferative architectural patterns in large digitized microscope slides. To perform this detection, a dataset containing approximately 5700 annotations was created by experts on the Cytomine platform. The major challenges involved with this problem are detailed hereafter. 
+The problem consists in finding cells with inclusion and proliferative architectural patterns in large digitized microscope slides. To perform this detection, a dataset containing approximately 6000 annotations was created by experts on the Cytomine platform. The major challenges involved with this problem are detailed hereafter. 
 
-\paragraph{Image quality} While the images resolution is more than acceptable, the images themselves are by nature not very well suited for object extraction. Indeed, the objects of interests are surrounded with a lot of other undesirable objects. Moreover, due to the imprecise nature of the staining performed before digitization, some staining variations appears from one slide to another but also within a single slide. 
+\paragraph{Image quality} While the images resolution is more than acceptable, the images themselves are by nature not very well suited for object extraction. Indeed, the objects of interests are surrounded with a lot of other undesirable objects. Moreover, due to the imprecise nature of the staining performed before digitization, some staining variations can appear across slides or within a slide. 
 
-\paragraph{Image size} As explained in Section \ref{sssec:detection_thyroid_dataset}, the size of the images ranges from 4 giga-pixels to 18 giga-pixels. Therefore, the various processing steps should be as efficient as possible to avoid huge execution times. Also, accessing the images must be done through HTTP requests. Therefore, a particular attention should be paid to the number of requests to be executed for fetching the image. Especially, some caching policy might be needed to reduce the network time overhead. 
+\paragraph{Image size} As explained in Section \ref{sssec:detection_thyroid_dataset}, the images sizes range from 4 giga-pixels to 18 giga-pixels. Therefore, the various processing steps should be as efficient as possible to avoid huge execution times. Also, accessing the images must be done through HTTP requests. Therefore, a particular attention should be paid to the number of requests to be executed for fetching the image. Especially, some caching policy might be needed to reduce those requests execution time overhead. 
 
-\paragraph{Class imbalance} The dataset of annotations is relatively balanced if all terms are considered separately. However, grouping terms for expressing the detection as a binary (or ternary) problem results in a major class imbalance, especially for the cells with inclusion versus normal cells problem. 
+\paragraph{Class imbalance} The dataset of annotations is relatively balanced if all terms are considered separately. However, grouping terms for expressing the detection as a binary (or ternary) problem results in class imbalance, especially for the cells with inclusion versus normal cells problem. 
 
-\paragraph{Human annotations} The human annotations are imperfect as experts usually annotate objects roughly (i.e. an annotation can be larger than the actual object). Moreover, some annotation drawing tools provided on the Cytomine platform generate particular shapes such as circles or rectangles. Assuming that an algorithm will annotate the cells more precisely, the resulting  differences in terms of geometry and information content of the crops might lead to poor results if the experts annotations are used as learning data. 
-
+\paragraph{Human annotations} The human annotations are imperfect as experts usually annotate objects roughly (i.e. an annotation can be larger than the actual object). Moreover, some annotation drawing tools provided on the Cytomine platform generate particular shapes such as circles or rectangles. Assuming that an algorithm will annotate the cells more precisely, the resulting  differences in terms of geometry and information content of the crops might affect the performances of any classifier fitted on those experts' annotations. 
 
 \section{First workflow}
 \label{sec:thyroid_adeblire_algo}
 
-The workflow developed by Antoine Deblire in \cite{adeblire2013} is summarized in Figure \ref{fig:workflow_adeblire}. The idea behind this workflow is fairly simple. A first segmentation is applied to extract standalone cells and architectural patterns (step 4.3). The detected objects are then differentiated using their area and circularity (step 4.4) and dispatched to a classifier (steps 4.6). Especially, architectural patterns are classified as proliferative or non-proliferative by a first classifier and the cells are classified as inclusion or normal by a second one. Then, architectural patterns are segmented again (step 4.5) to extract the cells they contain and those cells are also passed to the cell classifier. 
+The workflow developed by Antoine Deblire in \cite{adeblire2013} is summarized in Figure \ref{fig:workflow_adeblire}. The idea behind this workflow is fairly simple. A first segmentation is applied to extract standalone cells and architectural patterns (step 4.3). The detected objects are then differentiated using their area and circularity (step 4.4) and dispatched to a classifier (steps 4.6). Especially, architectural patterns are classified as proliferative or non-proliferative by a first classifier and the cells are classified as inclusion or normal by a second one. Then, architectural patterns are segmented again (step 4.5) to extract the cells they contain and those cells are also passed to the cell classifier. The next sections aim at explaining more thoroughly those steps.
 
 \begin{figure}
 	\center
@@ -28,10 +27,14 @@ The workflow developed by Antoine Deblire in \cite{adeblire2013} is summarized i
 \end{figure}
 
 \subsection{Segmentation procedures}
-The first segmentation procedure was designed for processing the whole slide and relies on a process called color deconvolution \cite{ruifrok2001quantification}. This process consists in retrieving the tissues stains concentration from the RGB image. It appears that cells and patterns have a high concentration of a certain stain in the project images. Therefore, a first segmentation mask is generated by thresholding an image of which each pixel contains an integer value representing the stain concentration for the same pixel in the original image. Some morphological operations are then applied in order to remove noise and fill unwanted holes. Some example segmentations are provided in Figure \ref{fig:first_seg_examples}. It seems that the procedure is able to detect most of the objects of interest although it sometimes fails at covering the whole object area. For instance in the third example image, there is a hole in the mask inside the pattern and this hole covers some cells that should be included in the mask. On the fourth example, one can see three standalone objects above the central pattern. Those objects' masks are smaller than their corresponding cells.
+The first segmentation procedure was designed for processing the whole slide and relies on a process called color deconvolution \cite{ruifrok2001quantification}. This process consists in retrieving the stains concentration of the objects contained in the image based on the RGB values of the pixels. Especially, given that the original slide was prepared with $S$ stains, the color deconvolution process generates a set of $S$ images where the pixel $p^s_{ij}$ of an image is the concentration level of the stain $s$ in the pixel $p^o_{ij}$ of the original image. This process is particularly useful in this case because cells and patterns have a high concentration of a given stain. The first segmentation procedure starts by generating the concentration image for the first stain. As pixels with a high concentration are supposed to be in an object of interest, a first binary mask is created by thresholding the concentration image. Some morphological operations are then applied in order to remove noise and fill unwanted holes. Some example segmentations are provided in Figure \ref{fig:first_seg_examples}. It seems that the procedure is able to detect most of the objects of interest although it sometimes fails at covering those objects' whole area. For instance, in the fourth example image, there is a hole in the mask inside the pattern and this hole covers some cells that should be included in the mask. On the fifth example, one can see three standalone objects above the central pattern. Those objects' masks are smaller than their corresponding cells. Also, on some images, regions containing a high stain concentration were marked as object by the segmentation. This can be seen on the first example image in Figure \ref{fig:first_seg_examples}. 
 
 \begin{figure}
 	\center
+	\subfigure{
+		\includegraphics[scale=0.35]{image/seg_fail_stain_nomask.png}
+		\includegraphics[scale=0.33]{image/seg_fail_stain_mask.png}
+	} \\
 	\subfigure{
 		\includegraphics[scale=0.5]{image/slide_segmentation_0_in.png}
 		\includegraphics[scale=0.5]{image/slide_segmentation_0_out.png}
@@ -56,7 +59,7 @@ The first segmentation procedure was designed for processing the whole slide and
 	\label{fig:first_seg_examples}
 \end{figure}
 
-The second segmentation procedure is applied to the architectural patterns and was designed to isolate individual cells inside those patterns. The implementation is a little more complicated than the first. Similarly, it starts with a color deconvolution to highlight the cells. However, the stain concentration image is not transformed into a binary mask using a fixed threshold but using Otsu's method. Using the \texttt{findContour} procedure of the OpenCV library as well as morphological operations, independent cells are located and cleaned one after the other. Finally, a watershed algorithm is applied to separate cells that intersects. Some example segmentations are provided in Figure \ref{fig:first_seg_examples}. The segmentation seems to work relatively well on "clean" patterns, that is where cells doesn't overlap much and are clearly distinguishable from the pattern background (see the first two examples in Figure \ref{fig:first_seg_examples}). One "dirty" patterns however, the segmentation performs poorly as it either returns large patches which doesn't correspond to cells or fails to separate overlapping cells.  
+The second segmentation procedure is applied to the detected patterns and was designed to isolate individual cells inside those patterns. The implementation is a little more complicated than the first. Similarly, it starts with a color deconvolution to highlight the cells. However, the stain concentration image is not transformed into a binary mask using a fixed threshold but using Otsu's method. Using the \texttt{findContour} procedure of the OpenCV library as well as morphological operations, independent cells are located and cleaned one after another. Finally, a watershed algorithm is applied to separate cells that overlap. Some example segmentations are provided in Figure \ref{fig:second_seg_examples}. The segmentation seems to work relatively well on "clean" patterns: that is, where cells don't overlap much and are clearly distinguishable from the pattern background (see the first two examples in Figure \ref{fig:second_seg_examples}). On "dirty" patterns however, the segmentation performs poorly as it either returns large patches which don't correspond to cells or fails to separate overlapping cells (see the two last examples in Figure \ref{fig:second_seg_examples}).  
 
 \begin{figure}
 	\center
@@ -84,18 +87,16 @@ The second segmentation procedure is applied to the architectural patterns and w
 	\label{fig:second_seg_examples}
 \end{figure}
 
-While the presented segmentation procedures exhibit some flaws, they were considered acceptable to test the \textit{SLDC} framework.
+While the presented segmentation procedures exhibit some flaws, they were considered acceptable to test the \textit{SLDC} framework. 
 
 \subsection{Dispatching procedure}
 \label{ssec:thyroid_ad_dispatch}
-The step (4.4) consists in dispatching detected objects into four categories: artefacts, cells, clusters and patterns. The categories \textit{artefact} and \textit{cluster} respectively correspond to irrelevant objects and to groups of cells that contains too few of them to be patterns. Even if the author distinguishes patterns and clusters at the dispatching step, objects of both categories are treated equally in the subsequent steps of the algorithm. That is, they are first evaluated by the pattern classifier (for assessing whether they are proliferative or not) and they then are re-segmented. The dispatching is based on four parameters, the cell minimum and maximum areas (respectively, $A_{min}$ and $A_{max}$), the cell minimum circularity $C_{min}$ and the minimum number of cells per pattern $N_{min}$. The values of those parameters are given in Table \ref{tab:adeb_disp_rules}. 
-
-Given $A$ the area of the object of interest, the dispatching rules can be summarized as follows:
+The step (4.4) consists in dispatching detected objects into four categories: artefacts, cells, clusters and patterns. The categories \textit{artefact} and \textit{cluster} respectively correspond to irrelevant objects and to groups of cells that contains too few of them to be patterns. Even if the author distinguishes patterns and clusters at the dispatching step, objects of both categories are treated equally in the subsequent steps of the algorithm. That is, they are first evaluated by the pattern classifier (for assessing whether they are proliferative or not) and they are re-segmented. The dispatching is based on four parameters, the cell minimum and maximum areas (respectively, $A_{min}$ and $A_{max}$), the cell minimum circularity $C_{min}$ and the minimum number of cells per pattern $N_{min}$. The values of those parameters as defined by Antoine Deblire are given in Table \ref{tab:adeb_disp_rules}. The dispatching rules can be summarized as follows:
 
 \begin{itemize}
-	\item \textbf{Artifact}: every object having an area less than $A_{min}$ or and area less than $A_{max}$ and a circularity less then $C_{min}$
-	\item \textbf{Cell}: every object having an area such that $A_{min} < A < A_{max}$ and a circularity greater than $C_{min}$
-	\item \textbf{Clusters}: every object of which the area is greater than $A_{max}$ and such that it contains at most $N_{min}$ cells:
+	\item \textbf{Artifact}: all objects having an area less than $A_{min}$ or an area less than $A_{max}$ and a circularity less than $C_{min}$
+	\item \textbf{Cell}: all objects having an area $A$ such that $A_{min} < A < A_{max}$ and a circularity greater than $C_{min}$
+	\item \textbf{Clusters}: all objects having an area $A$ greater than $A_{max}$ such that the object can contain at most $N_{min}$ cells:
 	\[
 		A_{max} < A < N_{min} \times A_{max}
 	\]
@@ -119,11 +120,11 @@ Given $A$ the area of the object of interest, the dispatching rules can be summa
 	\label{tab:adeb_disp_rules}
 \end{table}
 
-The author fixed the dispatching parameters values based on the areas and circularities of experts' annotations. As explained in Section \ref{sec:thyroid_impl_issue}, using those annotations to perform such a task might not be an good idea. Especially, the computed minimum and maximum areas might be a greater than the actual minimum and maximum areas of cells. 
+The author fixed the dispatching parameters values based on the areas and circularities of experts' annotations. As explained in Section \ref{sec:thyroid_impl_issue}, using those annotations to perform such a task might yield poor results. Especially, the computed minimum and maximum areas might be greater than the actual minimum and maximum areas of cells. Moreover, the circularity can sometimes be very close to 1 because the expert used the Circle drawing tool to annotate the object whereas this object is not circular at all. 
 
 In order the assess whether the dispatching rules are effective for distinguishing cells from patterns, the expert annotations present on Cytomine were used. While those annotations shouldn't be used for setting the parameters, their usage for assessing the method is acceptable. Indeed, in this case, only a qualitative analysis is performed. 
 
-The histograms given in Figures \ref{fig:hist_area_cell_vs_pattern} and \ref{fig:hist_circ_cell_vs_pattern} respectively show the area and circularity distributions of the experts' annotations. First, it appears that, whatever the metric, there is a substantial overlapping between the cells' and patterns' distributions. This has a major consequence for the dispatching procedure presented above. Indeed, as it relies on simple thresholdings, it is ineffective at separating the objects because of the overlapping. Another observation is that the parameters given in Table \ref{tab:adeb_disp_rules} are not relevant as most of the cells would be dispatched as patterns with such values. This observation is confirmed with the scatter plot shown in Figure \ref{fig:scatter_area_circ_cell_vs_pattern}. In this plot, only few cells are effectively dispatched as such (see the blue box in the top left corner of the plot), the others being dispatched as patterns. Given those observations, it is clear that the dispatching procedure must be re-worked.
+The histograms given in Figures \ref{fig:hist_area_cell_vs_pattern} and \ref{fig:hist_circ_cell_vs_pattern} respectively show the area and circularity distributions of the experts' annotations. First, it appears that, whatever the metric, there is a substantial overlapping between the cells' and patterns' distributions. This has a major consequence for the dispatching procedure presented above. Indeed, as it relies on simple thresholdings, it is ineffective at separating the objects. Another observation is that the parameters given in Table \ref{tab:adeb_disp_rules} are not relevant as most of the cells would be dispatched as patterns with such values. This observation is confirmed with the scatter plot shown in Figure \ref{fig:scatter_area_circ_cell_vs_pattern}. In this plot, only few cells are effectively dispatched as such (see the blue box in the top left corner of the plot), the others being dispatched as patterns. Given those observations, it is clear that the dispatching procedure must be re-worked.
 
 \begin{figure}
 	\center
@@ -144,57 +145,55 @@ The histograms given in Figures \ref{fig:hist_area_cell_vs_pattern} and \ref{fig
 
 As relying solely on geometrical properties is not a viable solution, an alternative consists in using the objects' crop image. Especially, the objects' crop would be classified into one of the dispatching categories (i.e. cell, pattern or other) using the random subwindows image classification algorithm \cite{Maree201617} (this algorithm is detailed in Appendix \ref{app:random_subwindows}). A drawback of this solution is that the dimensions of the objects are completely ignored. Given that some patterns might have a similar appearance then cells (color and shape), this might lead to misclassification. 
 
-The overcome the possible problems with the first solution, one could include the geometrical information of the polygons into the learning and prediction processes of the random subwindows algorithm. Especially, the circularity and area would be appended to the feature vector used by the SVM classifier to perform the image classification. This simple operation might not be sufficient however. Indeed, as the features extracted from the ensemble of randomized trees are numerous, the two geometric features would probably not contribute much to the prediction. To overcome this issue, a kernel could be used to increase the contribution of the geometric features. Whereas this solution might yield better results than the first, it requires the experts' annotations of the learning set to be cleaned to avoid the problem mentioned in Section \ref{sec:thyroid_impl_issue}. Moreover, it would require a non-negligible modification of the random subwindows algorithm. It was therefore considered out of the scope of this thesis and the first proposed solution was retained.
+The avoid the dispatching problem induced by simple thresholdings, one could include the geometrical information of the polygons into the learning and prediction processes. Especially, using the ET-FL variant of the random subwindows algorithm, the area and circularity would be appended to the feature vector generated from the extra-trees classifier. This augmented feature vector would then be passed to the SVM classifier for prediction. While intuitively, this solution seems appealing, it might need to be refined a little more. Indeed, the number of features generated from the extra-trees classifier is relatively large (e.g. for the models presented in Section \ref{ssec:thyroid_perf_models}), this number can reach 30000) and the geometrical features might therefore be overlooked by the SVM classifier. To overcome this problem, a kernel that would increase the contribution of the geometrical features could be used. Whereas this solution might yield better results than the first, it requires the experts' annotations of the learning set to be cleaned to avoid the problem mentioned in Section \ref{sec:thyroid_impl_issue}. Also, it would require a non-negligible modification of the random subwindows algorithm. As the goal is mostly to apply the framework and considering the amount of work implied by this solution, it was considered out of the scope for this thesis and the first solution was retained.
 
 \begin{figure}
 	\center
-	\includegraphics[scale=0.75]{image/scatter_cells_patterns_0_5000.png}
+	\includegraphics[scale=3]{image/scatter_cells_patterns_0_5000.png}
 	\caption{Scatter plot, circularity versus area. Green and red dots correspond respectively to cells and patterns. The blue box is the cell dispatching zone.}
 	\label{fig:scatter_area_circ_cell_vs_pattern}
 \end{figure}
 
 \subsection{Classification}
 
-As soon as objects are dispatched, they have to be classified. In \cite{adeblire2013}, the author uses two classification models: one for cells and another one for patterns. For patterns, a ternary classifier is used and predicts three classes: \textit{proliferative pattern}, \textit{non-proliferative pattern} and \textit{others}. The author states that the third class is needed because with a binary classifier, some objects were classifieed as patterns while they were not. Hopefully, with the new dispatching procedure, those objects will be eliminated before reaching the classifier. It was therefore decided to use a binary classifier for performing this classification. 
+As soon as objects are dispatched, they have to be classified. In \cite{adeblire2013}, the author uses two classification models: one for cells and another one for patterns. For patterns, a ternary classifier is used and predicts the following classes: \textit{proliferative pattern}, \textit{non-proliferative pattern} and \textit{other}. The author states that the third class is needed because with a binary classifier, some objects were classified as patterns while they were not. Hopefully, with the new dispatching procedure, those objects will be eliminated before reaching the classifier. It was therefore decided to use a binary classifier for performing this classification. 
 
-As far as the cell classifier is concerned, it predicts two classes: \textit{cells with inclusion} and \textit{non-inclusion}. In addition to the term \textit{cell with inclusion}, the author includes the pseudo inclusions in the positive class. 
+As far as the cell classifier is concerned, it predicts two classes: \textit{cells with inclusion} and \textit{non-inclusion}. In addition to the term \textit{cell with inclusion}, the author includes the \textit{pseudo inclusion} in the positive class in order to avoid missing some real inclusions that might look like a pseudo one. 
 
-The performance study for the various classifiers is given in Section \ref{ssec:thyroid_perf_models}.
+The final classifiers used for this implementation are detailed in Section \ref{ssec:thyroid_perf_models}.
 
 \section{Implementation}
 \label{sec:thyroid_implementation}
-Following the \textit{SLDC} framework philosophy, the problem dependent components have to be defined: an image representation, the segmentation procedures, the dispatching rules and the classifiers. Whenever possible, the components were developed to be reusable for other applications within Cytomine. Those generic components are colored in blue in UML diagrams while the components dependent on the thyroid problem are colored in green.
+Following the \textit{SLDC} framework philosophy, the problem dependent components have to be defined: the image representation, the segmentation procedures, the dispatching rules and the classifiers. Whenever possible, the components were developed to be reusable for other applications within Cytomine. Those generic components are coloured in blue in UML diagrams while the problem dependent components are coloured in green.
 
 \subsection{Image representation}
 
-The first component to be defined is the actual representation of the images to be processed, that is, the digitized microscope slides stored on the Cytomine platform. This representation is implemented in the \texttt{CytomineSlide} class which stores an \texttt{ImageInstance}\footnote{The \texttt{ImageInstance} class is defined in the Cytomine Python client} object containing all the information about the slide including its width, height and identifier. To prevent anyone from loading the full image into memory, the implementation of the \texttt{np\_image} raises the \texttt{NotImplementedError} exception. 
+The first component to be defined is the actual representation of the images to be processed, that is, the digitized microscope slides stored on the Cytomine platform. This representation is implemented in the \texttt{CytomineSlide} class which stores an \texttt{ImageInstance}\footnote{The \texttt{ImageInstance} class is defined in the Cytomine Python client} object containing all the information about the slide including its width, height and identifier. To prevent anyone from loading the full image into memory, the implementation of the \texttt{np\_image} raises a \texttt{NotImplementedError} exception. 
 
 In general, when the full image can be loaded into memory the default \texttt{Tile} class can be used. In this case, as this operation is impossible, a class \texttt{CytomineTile} was created to handle the tile image loading. Especially, the call to \texttt{np\_image} triggers an HTTP requests to the Cytomine server to fetch the corresponding image window. If the request fails (e.g. HTTP error) or returns an invalid result (e.g. returned image has an invalid size), a \texttt{TileExtractionError} is raised as advised in the documentation. The class \texttt{CytomineTileBuilder} was created to build \texttt{CytomineTile} objects.
 
-In order to reduce the overall execution time of the workflow, it is essential not to execute two times a same HTTP request for loading the image of a tile. To avoid this, the class \texttt{TileCache} was developed. It implements a simple caching policy using the local file system: when an image window is needed, the \texttt{TileCache} object first checks whether this image was already downloaded. If that is the case, the image can be loaded from the disk. Otherwise, the image is fetched by calling the \texttt{np\_image} method of the underlying tile and stored on the disk before being handed back to the caller. The class also provides methods for adding an alpha mask to the returned image. 
+In order to reduce the overall execution time of the workflow, it is essential not to execute two times a HTTP request for loading the same image window. To avoid this, the class \texttt{TileCache} was developed. It implements a simple caching policy using the local file system: when an image window is needed, the \texttt{TileCache} object first checks whether this image was already downloaded and stored on the disk. If that is the case, the request execution is bypassed and the image is loaded from the file. Otherwise, the image is fetched by calling the \texttt{np\_image} method of the underlying tile and stored on the disk before being handed back to the caller. The class also provides methods for adding an alpha mask to the returned image. 
 
-Some additional classes were developed to handle the addition of an alpha mask to an image window (class \texttt{CytomineMaskedWindow}) and to a tile (classes \texttt{CytomineMaskedTile} and \texttt{CytomineMaskedTileBuilder}). This feature is needed for the pattern segmentation procedure which assumes that an alpha mask indicating the position of the pattern is passed with the numpy array. To avoid storing an image representing the alpha mask into the classes, the mask is represented by a polygon. 
+Some additional classes were developed to handle the addition of an alpha mask to an image window (class \texttt{CytomineMaskedWindow}) and to a tile (classes \texttt{CytomineMaskedTile} and \texttt{CytomineMaskedTileBuilder}). This feature is needed for the pattern segmentation procedure which assumes that an alpha mask indicating the position of the pattern is passed with the numpy array. To avoid storing an image representing the alpha mask into memory, the mask is represented by a polygon. 
 
-The UML diagram of the package containing the image related classes is shown in Figure \ref{fig:uml_cyto_im_repr}.
+The UML diagram of the package containing the image-related classes is shown in Figure \ref{fig:uml_cyto_im_repr}.
 
 \begin{figure}
 	\center
-	\includegraphics[scale=0.85]{image/thyroid_image.png}
+	\includegraphics[scale=0.75]{image/thyroid_image.png}
 	\caption{UML diagram - Cytomine image representation}
 	\label{fig:uml_cyto_im_repr}
 \end{figure}
 
 \subsection{Classifier}
 
-All the classification tasks to perform in the context the thyroid problem are performed using the random subwindows algorithm \cite{Maree201617}. Especially, a Python implementation called Pyxit taken from Cytomine \cite{maree2016collaborative} was used. The central class of this implementation is the \texttt{PyxitClassifier} class which provides an scikit-learn-like interface to the algorithm (i.e. the methods \texttt{fit}, \texttt{transform}, \texttt{predict},...). In order to use this class within the framework, a class \texttt{PyxitClassifierAdapter} was developed. The \texttt{predict\_batch} method is implemented as follows.
+In the context of the the thyroid problem, all classification tasks are performed using the random subwindows algorithm \cite{Maree201617}. Especially, a Python implementation called Pyxit taken from Cytomine \cite{maree2016collaborative} was used. The central class of this implementation is the \texttt{PyxitClassifier} class which provides an scikit-learn-like interface to the algorithm (i.e. the methods \texttt{fit}, \texttt{transform}, \texttt{predict},...). In order to use this class within the framework, a class \texttt{PyxitClassifierAdapter} was developed. The \texttt{predict\_batch} method is implemented as follows.
 
- First, the crops of the polygons passed to the method are fetched and stored on the disk using a \texttt{TileCache} (thanks to the cache, the HTTP request is only executed the first time the crops are requested). Because there can be a lot of polygons, the fetching of the crops is parallelized and the number of available processes can be specified at the construction of the \texttt{PyxitClassifierAdapater} object. Each available process is passed a set of polygons of which the crops must be fetched in order to reduce the serialization overhead (see Section \ref{sssec:work_parallel}). If some crops cannot be fetched whatever the reason, the corresponding polygons are associated a class \texttt{None} and a probability 0. Moreover the user is notified with the logger about the crops that couldn't be fetched.
+ First, the crops of the polygons passed to the method are fetched and stored on the disk using a \texttt{TileCache} (thanks to the cache, the HTTP request is only executed the first time the crops are requested). Because there can be a lot of polygons, the fetching of the crops is parallelized and the number of available processes can be specified at the construction of the \texttt{PyxitClassifierAdapater} object. Each available process is passed a set of polygons of which the crops must be fetched in order to reduce the serialization overhead (see Section \ref{sssec:work_parallel}). If some crops cannot be fetched for whatever reason, the corresponding polygons are associated a class \texttt{None} and a probability 0. Moreover the user is notified with the logger about the crops that couldn't be fetched.
 
-As Pyxit works with images stored on the disk, a list containing the filepath of the images to classify is generated and passed to the \texttt{\_predict} method. This method implements the generation of the classification labels and probabilities. If a SVM classifier was provided at construction of the \texttt{PyxitClassifierAdapter} object, then the variant of the random subwindows algorithm that uses the extremely randomized trees as feature learner is used. That is, the Pyxit classifier is used to generate the features that are passed to the SVM classifier for predicting the labels. Otherwise, the variant that uses the extremely randomized trees as direct classifier is used. 
+As Pyxit works with images stored on the disk, a list containing the filepath of the images to classify is generated and passed to the \texttt{\_predict} method. This method implements the generation of the classification labels and probabilities. If a SVM classifier was provided at construction of the \texttt{PyxitClassifierAdapter} object, then ET-FL variant of the random subwindows algorithm is used. That is, the Pyxit classifier is used to generate the features that are passed to the SVM classifier for predicting the labels. Otherwise, the variant that uses the extremely randomized trees as direct classifier is used. Finally, the \texttt{predict\_batch} method aggregates the results returned by the \texttt{\_predict} method with the labels and probabilities generated for the polygons of which the crops couldn't be fetched and return those to the caller.
 
-Finally, the \texttt{predict\_batch} method aggregates the results returned by the \texttt{\_predict} method with the fake labels and probabilities generated for the polygons of which the crops couldn't be fetched.
-
-A static method is also provided for constructing a \texttt{PyxitClassifierAdapter} object from a serialized Pyxit model. Especially, the method deserializes the \texttt{PyxitClassifier} object as well as the SVM classifier if one is provided and passe them to the adapter's constructor. This method also sets the number of processes to use for fetching the crops. If the number of available processors is less than five, then all of them are used to fetch the crops. Otherwise, five processors are used. This value was chosen in order to avoid overloading Cytomine server when the number of available processors is high.
+This class also features a static method for constructing a \texttt{PyxitClassifierAdapter} object from a serialized Pyxit model. Especially, the method deserializes the Pyxit classifier as well as the SVM classifier if one is provided and passes them to the adapter's constructor. This method also sets the number of process to use for fetching the crops. If the number of available process is less than five, then all of them are used to fetch the crops. Otherwise, five processes are used at most in order to avoid overloading the Cytomine server.
 
 The UML diagram of the \texttt{PyxitClassifierAdapter} class is shown in Figure \ref{fig:uml_cyto_classifiers}.
 
@@ -207,11 +206,11 @@ The UML diagram of the \texttt{PyxitClassifierAdapter} class is shown in Figure 
 
 \subsection{Dispatching rules}
 
-As explained in Section \ref{ssec:thyroid_ad_dispatch}, the chosen dispatching method relies on a classifier of which the predicted class is the dispatching index. Especially, the classifier was built to predict the label 0 for cells, 1 for patterns and 2 for the other objects.
+As explained in Section \ref{ssec:thyroid_ad_dispatch}, the chosen dispatching method relies on a classifier which predicts the dispatching index. Especially, the classifier was built to predict the label 0 for \textit{cell}, 1 for \textit{pattern} and 2 for \textit{other}.
 
-To take advantage of the features provided by the class \texttt{PyxitClassifierAdapter} (i.e. caching, parallel fetching,...), it was reused and encapsulated in two classes extending \texttt{DispatchingRule}. The implementation of the rules' \texttt{evaluate\_batch} method is therefore straightforward. It first calls the \texttt{predict\_batch} method of the classifier adapter object and then generates a list of boolean values according to the returned classification labels. For the first rule, \texttt{CellRule}, \texttt{True} is associated to polygons of which the returned label is 0. For the second, \texttt{AggregateRule}, \texttt{True} is associated with polygons of which the predicted label is 1.
+To take advantage of the features provided by the class \texttt{PyxitClassifierAdapter} (i.e. caching, parallel fetching,...), it was reused and encapsulated in two classes extending \texttt{DispatchingRule}. The implementation of the rules' \texttt{evaluate\_batch} method is therefore straightforward. It first calls the \texttt{predict\_batch} method of the classifier adapter object and then generates a list of boolean values according to the returned classification labels. For the first rule, \texttt{CellRule}, \texttt{True} is associated to polygons of which the returned label is 0. For the second, \texttt{AggregateRule}, \texttt{True} is associated with polygons of which the predicted label is 1. After a first run of the algorithm, it appeared that despite the dispatcher classifier, a lot small artefacts were dispatched to the classifiers. Therefore, each rule was added a filtering procedure which excludes all objects of which the area is less than a given value. 
 
-Unfortunately, this organization implies that the polygons marking patterns and other objects will be classified two times by the same classifier. Indeed, because of the dispatching structure imposed by the framework, the polygons that are not matched by the first rule are evaluated by the second. This could be avoided by refactoring the framework or by implementing another dispatching strategy.
+Unfortunately, the fact that the dispatching is implemented with two rules implies that the polygons corresponding to patterns and other objects are classified two times. Indeed, because of the dispatching structure imposed by the framework, the polygons that are not matched by the first rule are evaluated by the second. This could be avoided by refactoring the framework or by implementing another dispatching strategy.
 
 The UML diagram containing the dispatching rule classes is shown in Figure \ref{fig:uml_cyto_disp_rules}.
 
@@ -224,7 +223,7 @@ The UML diagram containing the dispatching rule classes is shown in Figure \ref{
 
 \subsection{Segmentation}
 
-The segmentation procedures were implemented in two classes, \texttt{SlideSegmenter} and \texttt{AggregateSegmenter}. Both implementation were taken from Antoine Deblire's source code. Whereas the slide segmentation could be used almost directly without modification, the recovered aggregate segmentation procedure didn't work. It was therefore re-implemented following the explanations provided in the master thesis as well as the few comments present in the source code. After few tests, it appeared that both segmentation procedures were really slow because of the color deconvolution. Especially, to execute the color deconvolution on a 4 mega-pixels image yielded more than 2 seconds execution time. A first optimization pass was done over the function in order to reduce its execution time to 1 second (same image dimensions). The UML diagram containing the segmenter classes is shown in Figure \ref{fig:uml_cyto_segmenters}.
+The segmentation procedures were implemented in two classes, \texttt{SlideSegmenter} and \texttt{AggregateSegmenter}. Both implementation were taken from Antoine Deblire's source code. Whereas the slide segmentation could be used almost directly without modification, the recovered aggregate segmentation procedure didn't work. It was therefore re-implemented following the explanations provided in the master thesis as well as the few comments present in the source code. After few tests, it appeared that both segmentation procedures were rather slow because of the color deconvolution. Especially, to execute the color deconvolution on a 4 mega-pixels image yielded more than 2 seconds execution time. A first optimization pass was done over the function in order to reduce its execution time by a factor two. The UML diagram containing the segmenter classes is shown in Figure \ref{fig:uml_cyto_segmenters}.
 
 \begin{figure}
 	\center
@@ -235,7 +234,7 @@ The segmentation procedures were implemented in two classes, \texttt{SlideSegmen
 
 \subsection{Chaining}
 
-The chaining package of the framework must be used to define which detected objects (i.e. the patterns) must be re-segmented. First, an image provider must be defined to generate the \texttt{CytomineSlide} to be processed. This logic is implemented in the \texttt{SlideProvider} class. Then, the selection of the objects to be processed by the second workflow must be defined as a \texttt{WorkflowExecutor}. Especially, the class \texttt{AggregateWorkflowExecutor} was implemented to fulfill this role. The class defines the method \texttt{get\_windows} which implements the selection of objects to be re-segmented and the generation of \texttt{CytomineMaskedWindow} objects to be processed by the second workflow. Moreover, it extends the class \texttt{PolygonTranslatorWorkflowExecutor} because the polygons generated by this phase needs to be translated back into the full image reference system. The final component to be defined is the post processor which is passed all the detected objects and their classes. In the context of the thyroid problem, the post processor should upload the generated polygons and classes as annotations on the Cytomine platform. This logic is implemented in the \texttt{post\_process} method of the \texttt{ThyroidPostProcessor} class. Unfortunately, the Cytomine API doesn't provide any request for uploading annotations by batches and each annotation has to be added with two HTTP requests: one for uploading the geometry and another for uploading the predicted class and associated probability. To avoid waiting for each request to terminates before sending another one, the process was parallelized. The UML diagram containing the chaining classes is shown in Figure \ref{fig:uml_cyto_chaining}.
+In order to implement the re-segmentation, the chaining package must be used. First, an image provider must be defined to generate the \texttt{CytomineSlide} objects to be processed. This logic is implemented in the \texttt{SlideProvider} class. Then, the selection of the objects to be processed by the second workflow must be defined as a \texttt{WorkflowExecutor}. Especially, the class \texttt{AggregateWorkflowExecutor} was implemented to fulfill this role. The class defines the method \texttt{get\_windows} which implements the generation of \texttt{CytomineMaskedWindow} objects to be processed by the second workflow. Moreover, it extends the class \texttt{PolygonTranslatorWorkflowExecutor} because the polygons generated by this phase needs to be translated back into the full image reference system. The final component to be defined is the post processor which is passed all the detected objects and their classes. In the context of the thyroid problem, the post processor should upload the generated polygons and classes as annotations on the Cytomine platform. This logic is implemented in the \texttt{post\_process} method of the \texttt{ThyroidPostProcessor} class. Unfortunately, the Cytomine API doesn't provide any request for uploading annotations by batches and each annotation has to be added with two HTTP requests: one for uploading the geometry and another for uploading the predicted class and associated probability. To avoid waiting for each request to terminate before sending another one, the process was parallelized. The UML diagram containing the chaining classes is shown in Figure \ref{fig:uml_cyto_chaining}.
 
 
 \begin{figure}
@@ -256,9 +255,9 @@ This section presents the various performance analysis performed on the models u
 
 \subsubsection{Test set and metrics}
 \label{sssec:thyroid_test_set}
-In order to assess a supervised learning model, a classical approach is to split the objects of the input set into a \textit{learning set} on which the model is learned and \textit{test set} on which the error of the model is evaluated. The error extracted using this procedure is called the \textit{generalization error} and is a measure of how accurate the predictions of the model will be on unseen data. Typically, when the number of available objects in the input set is high, a valid split consists in leaving approximately 70 \% of the objects in the learning set. The motivation of this proportion is twofold. On the one hand, the learning process have enough data to build relevant models. On the other hand, the test set contains enough samples to make the assessment statistically relevant. However, the proportion is not the only factor that needs to be taken into account. Especially, when the input data is gathered from several sources, the split should be done to avoid overfitting the idiosyncracies of those sources. This can be done by placing the data generated from some sources in the test set and the others into the learning set. Finally, for the assessment to be relevant, the distribution of the target variable in the test set should be similar to its global distribution (i.e. in available data as well as in unseen data). This can be achieved by maintaining the distributions of this target variable in the test and learning sets as close as its distribution in the input set. 
+In order to assess a supervised learning model, a classical approach is to split the objects of the input set into a \textit{learning set} on which the model is learned and \textit{test set} on which the error of the model is evaluated. The error extracted using this procedure is called the \textit{generalization error} and is a measure of how accurate the predictions of the model will be on unseen data. Typically, when the number of available objects in the input set is high, a valid splitting strategy consists in leaving approximately 70 \% of the objects in the learning set. The motivation of this proportion is twofold. On the one hand, the learning process have enough data to build relevant models. On the other hand, the test set contains enough samples to make the assessment statistically relevant. However, the proportion is not the only factor that needs to be taken into account. Especially, when the input data is gathered from several sources, the split should be done to avoid overfitting the idiosyncracies of those sources. This can be done by placing the data generated from some sources in the test set and the others into the learning set. Finally, for the assessment to be relevant, the distribution of the target variable in the test set should be similar to its overall distribution (i.e. in available data as well as in unseen data). This similarity can be achieved by keeping the target variable's distributions in the learning and test sets close to that of the input set.
 
-The first task performed when it came to build the assessment procedure was therefore to split the input data, namely the experts' annotations, into a test set and a learning set. This was done following the guidelines presented above. Especially, the test set is composed of images selected so that the proportion of annotations it contains is approximately 30 \% and the distribution of the various terms of the ontology is close to their overall distribution in the project. Obviously, satisfying all the those constraints at once is impossible given the discrete nature of the problem\footnote{Distributions can only be affected by moving an image into the test set or out of it. Moreover, each image contains a certain number of annotations and terms.}, yet the final split still provides a good approximation. The final terms distribution in the test set and learning set is show in Table \ref{tab:term_distrib}. It can be seen in this table that some terms are a little imbalanced (e.g. normal cells or artifacts). This is due to the fact that modifying the split to balance those would have broken the balance of more important terms such as cells with inclusion or proliferative patterns. 
+The first task performed when it came to build the assessment procedure was therefore to split the input data, namely the experts' annotations, into a test set and a learning set. This was done following the guidelines presented above. Especially, the test set is composed of images selected so that the proportion of annotations it contains is approximately 30 \% and the distribution of the various terms of the ontology is close to their overall distribution in the project. Obviously, satisfying all those constraints at once is impossible given the discrete nature of the problem\footnote{Distributions can only be affected by moving an image into the test set or out of it. Moreover, each image contains a certain number of annotations and terms.}, yet the final split still provides a good approximation. The final terms distribution in the test set and learning set is show in Table \ref{tab:term_distrib}. It can be seen in this table that some terms are a little imbalanced (e.g. normal cells or artifacts). This is due to the fact that modifying the split to balance those would have broken the balance of more important terms such as cells with inclusion or proliferative patterns. 
 
 \begin{table}
 	\small
@@ -271,25 +270,25 @@ The first task performed when it came to build the assessment procedure was ther
 		\hline
 		\multicolumn{2}{|c|}{\textbf{Terms}} & Count & \% & Count & \% & Count & \% & \% & \% \\
 		\hline 
-		\parbox[t]{2mm}{\multirow{6}{*}{\rotatebox[origin=c]{90}{Cell}}} & NOS & 874 & 14,76 & 567 & 13,85 & 307 & 16,81 & 64,87 & 35,13 \\
-		& Normal & 954 & 16,11 & 548 & 13,38 & 406 & 22,23 & 57,44 & 42,56 \\
-		& Pseudo-inclusion & 212 & 3,58 & 160 & 3,91 & 52 & 2,85 & 75,47 & 24,53 \\
-		& Ground glass & 13 & 0,22 & 8 & 0,20 & 5 & 0,27 & 61,54 & 38,46 \\
-		& Grooves & 194 & 3,28 & 144 & 3,52 & 50 & 2,74 & 74,23 & 25,77 \\
-		& Inclusion & 738 & 12,46 & 522 & 12,75 & 216 & 11,83 & 70,73 & 29,27 \\
+		\parbox[t]{2mm}{\multirow{6}{*}{\rotatebox[origin=c]{90}{Cell}}} & NOS & 874 & 14.76 & 567 & 13.85 & 307 & 16.81 & 64.87 & 35.13 \\
+		& Normal & 954 & 16.11 & 548 & 13.38 & 406 & 22.23 & 57.44 & 42.56 \\
+		& Pseudo-inclusion & 212 & 3.58 & 160 & 3.91 & 52 & 2.85 & 75.47 & 24.53 \\
+		& Ground glass & 13 & 0.22 & 8 & 0.20 & 5 & 0.27 & 61.54 & 38.46 \\
+		& Grooves & 194 & 3.28 & 144 & 3.52 & 50 & 2.74 & 74.23 & 25.77 \\
+		& Inclusion & 738 & 12.46 & 522 & 12.75 & 216 & 11.83 & 70.73 & 29.27 \\
 		\hline
-		\parbox[t]{2mm}{\multirow{3}{*}{\rotatebox[origin=c]{90}{Pattern}}} & Normal & 798 & 13,48 & 584 & 14,26 & 214 & 11,72 & 73,18 & 26,82 \\
-		& Prolif. & 761 & 12,85 & 540 & 13,19 & 221 & 12,10 & 70,96 & 29,04 \\
-		& Prolif. (minor)& 300 & 5,07 & 225 & 5,49 & 75 & 4,11 & 75,00 & 25,00 \\
+		\parbox[t]{2mm}{\multirow{3}{*}{\rotatebox[origin=c]{90}{Pattern}}} & Normal & 798 & 13.48 & 584 & 14.26 & 214 & 11.72 & 73.18 & 26.82 \\
+		& Prolif. & 761 & 12.85 & 540 & 13.19 & 221 & 12.10 & 70.96 & 29.04 \\
+		& Prolif. (minor)& 300 & 5.07 & 225 & 5.49 & 75 & 4.11 & 75.00 & 25.00 \\
 		\hline
-		\parbox[t]{2mm}{\multirow{6}{*}{\rotatebox[origin=c]{90}{Other}}} & Macrophage & 273 & 4,61 & 155 & 3,79 & 118 & 6,46 & 56,78 & 43,22 \\
-		& Red blood & 98 & 1,66 & 24 & 0,59 & 74 & 4,05 & 24,49 & 75,51 \\
-		& Polynuclear & 226 & 3,82 & 177 & 4,32 & 49 & 2,68 & 78,32 & 21,68 \\
-		& Colloid & 57 & 0,96 & 37 & 0,90 & 20 & 1,10 & 64,91 & 35,09 \\
-		& Artefact & 286 & 4,83 & 281 & 6,86 & 5 & 0,27 & 98,25 & 1,75 \\
-		& Background & 137 & 2,31 & 123 & 3,00 & 14 & 0,77 & 89,78 & 10,22 \\
+		\parbox[t]{2mm}{\multirow{6}{*}{\rotatebox[origin=c]{90}{Other}}} & Macrophage & 273 & 4.61 & 155 & 3.79 & 118 & 6.46 & 56.78 & 43.22 \\
+		& Red blood & 98 & 1.66 & 24 & 0.59 & 74 & 4.05 & 24.49 & 75.51 \\
+		& Polynuclear & 226 & 3.82 & 177 & 4.32 & 49 & 2.68 & 78.32 & 21.68 \\
+		& Colloid & 57 & 0.96 & 37 & 0.90 & 20 & 1.10 & 64.91 & 35.09 \\
+		& Artefact & 286 & 4.83 & 281 & 6.86 & 5 & 0.27 & 98.25 & 1.75 \\
+		& Background & 137 & 2.31 & 123 & 3.00 & 14 & 0.77 & 89.78 & 10.22 \\
 		\hline
-		& \textbf{Total} & \textbf{5921} & 100 & \textbf{4095} & 100 & \textbf{1826} & 100 & \textbf{70,49} & \textbf{29,51} \\
+		& \textbf{Total} & \textbf{5921} & 100 & \textbf{4095} & 100 & \textbf{1826} & 100 & \textbf{70.49} & \textbf{29.51} \\
 		\hline
 		\multicolumn{2}{|c|}{\textbf{Images}} & \multicolumn{2}{|c|}{61} & \multicolumn{2}{c|}{43} & \multicolumn{2}{c|}{18} & &  \\
 		\hline
@@ -305,7 +304,7 @@ Now that the test set is built, the metrics that will be used for assessing the 
 	\item \textbf{precision}: the number of true positive over the number of predicted positive. Intuitively, it is the ability of the classifier not to classify positive objects as negative.
 \end{itemize}
 
-All the previous metrics can be computed based the confusion matrix. It is a square matrix of order $N$ where $N$ is the number of classification labels. Its element $m_{ij}$ contains the number of objects that are actually associated the $i^{th}$ label but were predicted the $j^{th}$ one. In order to have several indicators of the models performances, all the metrics mentioned above were used. 
+All the previous metrics can be computed based the confusion matrix, a square matrix of order $N$ where $N$ is the number of classification labels. Its element $m_{ij}$ contains the number of objects that are actually associated the $i^{th}$ label but were predicted the $j^{th}$ one by a model. In order to have several indicators of the models performances, all the metrics mentioned above were used. 
 
 \subsubsection{Cross validation and model selection}
 \label{sssec:thyroid_cv}
@@ -323,14 +322,14 @@ The random subwindows algorithm has several parameters that can be tuned to impr
 		\texttt{colorspace} & Pyxit & Colorspace into which the windows must be converted before being passed to the underlying classifier. Available colorspaces are HSV and normalized RGB\\
 		\texttt{min\_sample\_split} & Extra-trees & Minimum number of objects required to split a node \\
 		\texttt{max\_features} & Extra-trees & Maximum number of features to evaluate when looking for the best split in the decision tree algorithm \\ 
-		\texttt{C} & SVM & SVM penalty parameter. Only available in the variant of the random subwindows algorithm which uses the SVM layer.\\
+		\texttt{C} & SVM & SVM penalty parameter. Only available when the ET-FL variant of the random subwindows algorithm is used.\\
 		\hline
 	\end{tabular}
 	\caption{Random subwindows algorithm parameters to tune}
 	\label{tab:tunable_parameters}
 \end{table}
 
-In order to maximize the performances of the produced models, a tuning procedure was implemented to extract the best combination of parameters. The procedure creates a set of models using all the possible combinations of parameters values provided by the user. Each model is then assessed using cross-validation and the best model's parameters are returned. Similarly to model assessment, the fact that annotations come from several images should be taken into account to avoid overfitting. Especially, the performance of a model were assessed using a cross-validation strategy sometimes called \textit{leave one image out}. Given a learning set containing $N$ images, each image is taken out from the learning set in turn and the model is learned on the $N - 1$ remaining images. The performance score of the model is then assessed on the taken out image. This process generates $N$ scores which are averaged and the resulting score is associated to the model.
+In order to maximize the performances of the produced models, a tuning procedure was implemented to extract the best combination of parameters. The procedure creates a set of models using all the possible combinations of parameters values provided by the user. Each model is then assessed using cross-validation and the best model's parameters are returned. Similarly to model assessment, the fact that annotations come from several images should be taken into account to avoid overfitting. Especially, the performance of a model were assessed using a cross-validation strategy called \textit{leave one image out}. Given a learning set containing $N$ images, each image is taken out from the learning set in turn and the model is learned on the $N - 1$ remaining images. The performance score of the model is then computed on the taken out image. This process generates $N$ scores which are averaged and the resulting score is associated to the model.
 
 \begin{figure}
 	\center
@@ -339,42 +338,58 @@ In order to maximize the performances of the produced models, a tuning procedure
 	\label{fig:loio}
 \end{figure}
 
-Finally, the full assessment procedure consists in splitting the dataset into a learning set and a test set. Then the best model for the given combinations of parameters is found by cross-validation on the learning set and the resulting best model is assessed on the test set using the metrics presented in \ref{sssec:thyroid_test_set}.
+Finally, the full assessment procedure consists in splitting the dataset into a learning set and a test set. Then the best model for the given combinations of parameters is found by cross-validation on the learning set and this model is assessed on the test set using the metrics presented in \ref{sssec:thyroid_test_set}.
 
 
 \subsubsection{General comments about classifiers}
-For each required classifier, both variants of the random subwindows algorithm were evaluated: the first variant where the extra-trees are used as direct classifier (\textit{ET-DIC}), and the second where they are used as features learner to be fed to a SVM classifier (\textit{ET-FL}). Moreover, both variants were evaluated on a first learning set containing only experts' annotations and on a second which was augmented with some reviewed annotations (see Section \ref{sssec:detect_cytomine} for reviewing). Especially, the latter annotations were generated by an execution the workflow on an image from the learning set. They were reviewed by ?? Raphaël Marée ?? in an attempt to improve the classifiers performances. 
+For each required classifier, both variants of the random subwindows algorithm were evaluated: the first variant where the extra-trees are used as direct classifier (\textit{ET-DIC}), and the second where they are used as features learner to be fed to a SVM classifier (\textit{ET-FL}). Moreover, both variants were evaluated on a first learning set containing only experts' annotations and on a second which was augmented with some reviewed annotations (see Section \ref{sssec:detect_cytomine} for reviewing). Especially, the latter annotations were generated by an execution the workflow on an image from the learning set and  were reviewed on Cytomine in an attempt to improve the classifiers performances. 
 
-As far as the parameters are concerned, a first cross-validation procedure was apply to narrow the search space. Especially, this was applied for finding whether the some window sizes could be dropped. Intuitively, classifiers that deal with "\textit{big}" objects will probably produce better results if they use small windows as those will be able to capture some determinant details of the objects. In contrast, classifiers dealing with "\textit{small}" objects are expected to produce better results with large windows. This intuition was confirmed by the first cross-validation procedure. 
+As far as the parameters are concerned, a first cross-validation procedure was apply to narrow the search space. Especially, this was applied for finding the ranges in which the window minimum and maximum sizes should be taken. Intuitively, classifiers that deal with "\textit{big}" objects containing repeating patterns\footnote{Here, the term pattern doesn't refer to architectural patterns.} will probably produce better results if they use small windows as those will be able to capture some determinant details of the objects. In contrast, classifiers dealing with "\textit{small}" objects are expected to produce better results with large windows. This intuition was confirmed by the first cross-validation procedure. 
 
-For the ET-FL variant, the parameter \texttt{min\_sample\_split} wasn't tuned. Indeed, as suggested by ?? Raphaël Marée (cite paper instead ??) ?? its values could be set to $\frac{W}{1000}$ where $W$ is the number of subwindows in the learning set. In addition to the good results yielded by this value, the prediction time of the resulting model is reduced compared to that of a model for which the parameter was set to $1$. Indeed, the first model contains less leaf node which reduces dramatically the size of the features vector passed to the SVM classifier. As far as the ET-DIC variant is concerned, the same parameters was tuned with the following set of value: $\left\{1, 0.001 \times W, 0.01 \times W, 0.02 \times W, 0.05 \times W \right\}$ where $W$ has the same meaning as above.
+For the ET-FL variant, the parameter \texttt{min\_sample\_split} wasn't tuned. Indeed, as suggested in \cite{Maree201617}, it could be set to $\frac{W}{1000}$ where $W$ is the number of subwindows in the learning set. Particularly, this value prevents the extre-trees to learn features that are too specific and also reduces the execution time compared to that of a model for which the parameter was set to $1$. Indeed, the former model contains less leaf nodes which reduces the size of the features vector passed to the SVM classifier. As far as the ET-DIC variant is concerned, the same parameters was tuned with the following set of value: $\left\{1, \frac{W}{1000}, \frac{W}{100}, \frac{W}{50}, \frac{W}{20} \right\}$.
 
-The parameter \texttt{max\_features} was tuned whatever the variant and the same four values were always provided: $\left\{1, \sqrt{M}, \frac{M}{2}, M\right\}$ where $M$ is the number of features passed to the underlying extra-trees classifier. As the dimension of the resized windows are $16\times 16$, the number of features equals 768. Those four values were chosen to span over the range $[1, 768]$ and $\sqrt{M}$ is the default suggested in \cite{Geurts2006}. 
+The parameter \texttt{max\_features} was tuned whatever the variant and the same four values were always provided: $\left\{1, \sqrt{M}, \frac{M}{2}, M\right\}$ where $M$ is the number of features passed to the underlying extra-trees classifier. As the dimensions of the resized windows are $16\times 16$, the number of features $M$ equals 768 in this case. Those four values were chosen to span over the range $[1, 768]$ and $\sqrt{M}$ is the default value suggested in \cite{Geurts2006}. 
 
 \subsubsection{Pattern classifier}
 \label{sssec:thyroid_pattern_model}
-The pattern classifier is a binary model which predicts whether a pattern is proliferative or not. The correspondence between the output classes and the terms is rather straightforward and was done as follows:
+The pattern classifier is a binary model which predicts whether a pattern is proliferative or not. The correspondence between the output classes and the terms is rather straightforward and is the following:
 
 \begin{itemize}
 	\item Output \textbf{positive} (class 1): terms \textit{proliferative architectural pattern} and \textit{proliferative architectural pattern (minor sign)}
 	\item Output \textbf{negative} (class 0): term \textit{normal follicular architectural pattern}
 \end{itemize}
 
-The only terms used are the ones from the subcategory \textit{Patterns} as all the objects to be classified by this model are expected to be patterns.  Indeed, other objects have normally been filtered by the dispatching model. Luckily, this distribution of terms yields some rather balanced learning set and test sets (see Table \ref{tab:pattern_classif_dataset_size}). As patterns are usually large objects, only small window sizes were evaluated during cross validation. The full set of evaluated parameters is given in Appendix \ref{app:parameters} while the best ones are given in Table \ref{tab:pattern_classif_best_params}. 
+The only terms used are the ones from the subcategory \textit{Pattern} as all the objects to be classified by this model are expected to be patterns.  Indeed, other objects have normally been filtered by the dispatching model. Luckily, this distribution of terms yields some rather balanced learning set and test sets (see Table \ref{tab:pattern_classif_dataset_size}). As patterns are usually large objects, only small window sizes were evaluated during cross validation. The full set of evaluated parameters is given in Appendix \ref{app:parameters} while the best ones are given in Table \ref{tab:pattern_classif_best_params}. It seems that the HSV colorspace is particularly appropriate to the pattern classification problem. 
+
+The best models' performances are given in Table \ref{tab:pattern_classif_best_scores}. All models perform relatively well. Especially, almost all models exhibit an impressive recall of 96 \% except for the ET-FL variant with reviewed annotations of which the recall drops to 94 \%. As the performances are comparable, the model selected to be used for executing the workflow was the ET-DIC variant without reviewed because this model can generate class probabilities and that its performances are slightly better. 
 
 \begin{table}
 	\small
 	\center
-	\begin{tabular}{|c|cc|cc|cc|cc|}
-		\hline
-		& \multicolumn{2}{|c|}{Inclusion} & \multicolumn{2}{c|}{Normal} & \multicolumn{2}{c|}{Total}\\
-		\hline		
-		LS & 765 & \tiny (56.71\%) & 584 & \tiny (43.29\% & 1349 & \tiny (72.57\%)\\
-		TS & 296 & \tiny (58.04\%) & 214 & \tiny (41.96\%) & 510 & \tiny (27.43\%)\\
-		\hline
-		Total & & 1061 & \tiny (57.07\%) & 798 & \tiny (42.93\%) & \multicolumn{2}{c|}{}\\
-		\hline
-	\end{tabular}
+	\subfigure [Experts' annotations] {
+		\begin{tabular}{|c|cc|cc|cc|cc|}
+			\hline
+			& \multicolumn{2}{|c|}{Inclusion} & \multicolumn{2}{c|}{Normal} & \multicolumn{2}{c|}{Total}\\
+			\hline		
+			LS & 765 & \tiny (56.71\%) & 584 & \tiny (43.29\%) & 1349 & \tiny (72.57\%)\\
+			TS & 296 & \tiny (58.04\%) & 214 & \tiny (41.96\%) & 510 & \tiny (27.43\%)\\
+			\hline
+			Total & 1061 & \tiny (57.07\%) & 798 & \tiny (42.93\%) & \multicolumn{2}{c|}{}\\
+			\hline
+		\end{tabular}
+	}
+	\subfigure [Reviewed] {
+		\begin{tabular}{|c|cc|cc|cc|cc|}
+			\hline
+			& \multicolumn{2}{|c|}{Inclusion} & \multicolumn{2}{c|}{Normal} & \multicolumn{2}{c|}{Total}\\
+			\hline		
+			LS & 908 & \tiny (60.09\%) & 603 & \tiny (39.91\%) & 1511 & \tiny (74.76\%)\\
+			TS & 296 & \tiny (58.04\%) & 214 & \tiny (41.96\%) & 510 & \tiny (25.24\%)\\
+			\hline
+			Total & 1061 & \tiny (57.07\%) & 798 & \tiny (42.93\%) & \multicolumn{2}{c|}{}\\
+			\hline
+		\end{tabular}
+	}
 	\caption{Pattern classifier. Dataset size.}
 	\label{tab:pattern_classif_dataset_size}
 \end{table}
@@ -382,15 +397,15 @@ The only terms used are the ones from the subcategory \textit{Patterns} as all t
 \begin{table}
 	\small
 	\center 
-	\begin{tabular}{|c|c|c|c|c|c|}
+	\begin{tabular}{|c|c|cc|cc|}
 		\hline
 		& & ET-DIC & ET-DIC (r) & ET-FL & ET-FL (r) \\
 		\hline
-		LS & accuracy & 0.8285 & & 0.8849 & \\
+		LS & accuracy & 0.8285 & 0.8224 & 0.8849 & 0.886\\
 		\hline
-		\multirow{3}{*}{TS} & accuracy & 0.8664 & & 0.8664 & \\
-		& recall & 0.9662 & & 0.9628 & \\
-		& precision & 0.8314 & & 0.83333 & \\
+		\multirow{3}{*}{TS} & accuracy & 0.8664 & 0.8468 & 0.8664 & 0.8625\\
+		& recall & 0.9662 & 0.9628 & 0.9628 & 0.9493\\
+		& precision & 0.8314 & 0.8097 & 0.83333 & 0.8363\\
 		\hline
 	\end{tabular}
 	\caption{Pattern classifier. Best model's performance.}
@@ -404,12 +419,12 @@ The only terms used are the ones from the subcategory \textit{Patterns} as all t
 		\hline
 		Parameters & ET-DIC & ET-DIC (r) & ET-FL & ET-FL (r) \\
 		\hline		
-		\texttt{pyxit\_min\_size} & 0.3 & & 0.2 & \\
-		\texttt{pyxit\_max\_size} & 0.4 & & 0.4 & \\
-		\texttt{colorspace} & HSV & & HSV & \\
-		\texttt{min\_sample\_split} & 1 & & 67 & 232\\
-		\texttt{max\_features} & 1 & & 1 & \\ 
-		\texttt{C} & / & / & 0.1 & \\
+		\texttt{pyxit\_min\_size} & 0.3 & 0.2 & 0.2 & 0.2\\
+		\texttt{pyxit\_max\_size} & 0.4 & 0.4 & 0.4 & 0.4 \\
+		\texttt{colorspace} & HSV & HSV & HSV & HSV \\
+		\texttt{min\_sample\_split} & 1 & 1 & 67 & 76 \\
+		\texttt{max\_features} & 1 & 1 & 1 & 1 \\ 
+		\texttt{C} & / & / & 0.1 & 1.0 \\
 		\hline
 	\end{tabular}
 	\caption{Pattern classifier. Best model's parameters.}
@@ -434,8 +449,8 @@ The only terms used are the ones from the subcategory \textit{Patterns} as all t
 			\hline 
 			& \multicolumn{2}{c}{Normal} & \multicolumn{2}{c|}{Prolif.} \\
 			\hline
-			Normal & & \tiny (30.45\%) &  & \tiny (11.39\%)\\
-			Prolif. &  & \tiny (1.96\%) &  & \tiny (56.19\%)\\
+			Normal & 146 & \tiny (28.68\%) & 67 & \tiny (13.16\%)\\
+			Prolif. & 11 & \tiny (2.16\%) & 287 & \tiny (55.99\%)\\
 			\hline
 		\end{tabular}
 	} \\
@@ -445,7 +460,7 @@ The only terms used are the ones from the subcategory \textit{Patterns} as all t
 			& \multicolumn{2}{c}{Normal} & \multicolumn{2}{c|}{Prolif.} \\
 			\hline
 			Normal & 156 & \tiny (30.65\%) & 57 & \tiny (11.20\%)\\
-			Prolif. & 11 & \tiny (2.16\%) & 285 & \tiny (56.99\%)\\
+			Prolif. & 11 & \tiny (2.16\%) & 285 & \tiny (55.99\%)\\
 			\hline
 		\end{tabular}
 	}
@@ -454,8 +469,8 @@ The only terms used are the ones from the subcategory \textit{Patterns} as all t
 			\hline 
 			& \multicolumn{2}{c}{Normal} & \multicolumn{2}{c|}{Prolif.} \\
 			\hline
-			Normal &  & \tiny (30.45\%) &  & \tiny (11.39\%)\\
-			Prolif. && \tiny (1.96\%) & 6& \tiny (56.19\%)\\
+			Normal & 158 & \tiny (31.04\%) & 55 & \tiny (10.81\%)\\
+			Prolif. & 15 & \tiny (2.95\%) & 281 & \tiny (55.21\%)\\
 			\hline
 		\end{tabular}
 	}
@@ -473,21 +488,56 @@ The cell classifier is a binary model which predicts whether a cell contains an 
 	\item Output \textit{negative} (class 0) : terms \textit{cell with NOS}, \textit{pseudo-inclusion}, \textit{ground glass nuclei}, \textit{nuclear grooves}, \textit{normal cell}, \textit{red blood cell} and \textit{polynuclear}
 \end{itemize}
 
-While for the pattern classifer, only objects from the \textit{Pattern} subcategory were used, the cell classifier is trained with two terms from the \textit{Other} subcategory. This was done because those two terms (i.e. red blood cell and polynuclear) corresponds to objects that can be mistaken with actual cells. Especially, if those objects are dispatched to the cell classifier, it has to be able to associate to them the negative class. Choosing this mapping has nevertheless the drawback of emphasizing the class imbalance. Table \ref{tab:cell_classif_dataset_size} shows that only 25 \% of the objects input set are cells with inclusion. 
+While for the pattern classifer, only objects from the \textit{Pattern} subcategory were used, the cell classifier is trained with two terms from the \textit{Other} subcategory. This was done because those two terms (i.e. red blood cell and polynuclear) corresponds to objects that can be mistaken with actual cells. Especially, if those objects are dispatched to the cell classifier, it has to be able to associate to them the negative class. Choosing this mapping has nevertheless the drawback of emphasizing the class imbalance. Table \ref{tab:cell_classif_dataset_size} shows that only 25 \% of the objects input set are cells with inclusion. For this classifier, the windows sizes were chosen relatively big (see Table \ref{tab:app_cell_classif_tuned}) as the cells are small objects. 
 
+The performance expectations for this classifier are the following: the consequences of the presence of cells with inclusion is such that those should not missed. Especially, recall should be as high as possible. Moreover, as the cells found by the workflow would in practice be reviewed by physicians (before making a diagnosis), the number of false positive should also kept as small as possible. This would be expressed by a high precision. The best models' performances are given in Table \ref{tab:cell_classif_best_scores}. Those results shows that while providing a good precision, the models fails at detecting cells with inclusion. The performances are particularly bad and worst than random guessing when the model is built using the ET-DIC variant as only 13 \% of the cells with inclusion are correctly labelled as such. The results are better with the ET-FL variant as the recall rises to 50 \% on the dataset containing the reviewed annotations. While the increase is spectacular, the model still performs very poorly as random guessing would yield the same performances, at least in term of recall. 
+
+Those poor performances can be explained by two factors. The first is the similarity between the cells containing an inclusion and some cells of the negative class. For instance, the cells with pseudo inclusion are very similar to cells with inclusion as shown in Figure \ref{fig:similarity_incl_pseudo}. The second is the class imbalance in the dataset. It appears that adding the reviewed annotations in the learning has improved the recall with the ET-FL variant. Increasing the amount of data by performing more reviewing might be a solution to improve the classifier.
+
+\begin{figure}
+	\center
+	\subfigure [Pseudo-inclusion] {
+		\includegraphics[scale=0.25]{image/pseudo1.png}
+		\includegraphics[scale=0.25]{image/pseudo2.png}
+		\includegraphics[scale=0.25]{image/pseudo3.png}
+		\includegraphics[scale=0.25]{image/pseudo4.png}
+	}
+	\subfigure [Inclusion] {
+		\includegraphics[scale=0.25]{image/incl1.png}
+		\includegraphics[scale=0.25]{image/incl2.png}
+		\includegraphics[scale=0.25]{image/incl3.png}
+		\includegraphics[scale=0.25]{image/incl4.png}
+	}
+	\caption{Similarity between pseudo-inclusion and cells with inclusion}
+	\label{fig:similarity_incl_pseudo}
+\end{figure}
 \begin{table}
 	\small
 	\center
-	\begin{tabular}{|c|cc|cc|cc|}
-		\hline
-		& \multicolumn{2}{|c|}{Inclusion} & \multicolumn{2}{c|}{Normal} & \multicolumn{2}{c|}{Total}\\
-		\hline		
-		LS & 567 & \tiny (26.37\%) & 1583 & \tiny (73.63\%) & 2150 & \tiny (64.97\%)\\
-		TS & 307 & \tiny (26.49\%) & 852 & \tiny (73.51\%) & 1159 & \tiny (35.03\%)\\
-		\hline
-		Total & 874 & \tiny (26.41\%) & 2435 & \tiny (73.59\%) & \multicolumn{2}{c|}{}\\
-		\hline
-	\end{tabular}
+	\subfigure [Experts' annotations] {
+		\begin{tabular}{|c|cc|cc|cc|}
+			\hline
+			& \multicolumn{2}{|c|}{Inclusion} & \multicolumn{2}{c|}{Normal} & \multicolumn{2}{c|}{Total}\\
+			\hline		
+			LS & 567 & \tiny (26.37\%) & 1583 & \tiny (73.63\%) & 2150 & \tiny (64.97\%)\\
+			TS & 307 & \tiny (26.49\%) & 852 & \tiny (73.51\%) & 1159 & \tiny (35.03\%)\\
+			\hline
+			Total & 874 & \tiny (26.41\%) & 2435 & \tiny (73.59\%) & \multicolumn{2}{c|}{}\\
+			\hline
+		\end{tabular}
+	}
+	\subfigure [Reviewed] {
+		\begin{tabular}{|c|cc|cc|cc|}
+			\hline
+			& \multicolumn{2}{|c|}{Inclusion} & \multicolumn{2}{c|}{Normal} & \multicolumn{2}{c|}{Total}\\
+			\hline		
+			LS & 571 & \tiny (18.26\%) & 2556 & \tiny (81.74\%) & 3127 & \tiny (72.96\%)\\
+			TS & 307 & \tiny (26.49\%) & 852 & \tiny (73.51\%) & 1159 & \tiny (27.04\%)\\
+			\hline
+			Total & 878 & \tiny (20.49\%) & 3408 & \tiny (79.51\%) & \multicolumn{2}{c|}{}\\
+			\hline
+		\end{tabular}
+	}
 	\caption{Cell classifier. Dataset size.}
 	\label{tab:cell_classif_dataset_size}
 \end{table}
@@ -495,15 +545,15 @@ While for the pattern classifer, only objects from the \textit{Pattern} subcateg
 \begin{table}
 	\small
 	\center 
-	\begin{tabular}{|c|c|c|c|c|c|}
+	\begin{tabular}{|c|c|cc|cc|}
 		\hline
 		& & ET-DIC & ET-DIC (r) & ET-FL & ET-FL (r) \\
 		\hline
-		LS & accuracy & 0.7645 & & 0.7813 & \\
+		LS & accuracy & 0.7645 & 0.7613 & 0.7813 & 0.7873\\
 		\hline
-		\multirow{3}{*}{TS} & accuracy & 0.8333 & & 0.8696 & \\
-		& recall & 0.1302 & & 0.7462 & \\
-		& precision & 0.8235 & & 0.4512 & \\
+		\multirow{3}{*}{TS} & accuracy & 0.8333 & 0.8351 & 0.8696 & 0.8523\\
+		& recall & 0.1302 & 0.1349 & 0.4512 & 0.4930 \\
+		& precision & 0.8235 & 0.8529 & 0.7462 & 0.6310 \\
 		\hline
 	\end{tabular}
 	\caption{Cell classifier. Best model's performance.}
@@ -517,11 +567,11 @@ While for the pattern classifer, only objects from the \textit{Pattern} subcateg
 		\hline
 		Parameters & ET-DIC & ET-DIC (r) & ET-FL & ET-FL (r) \\
 		\hline		
-		\texttt{pyxit\_min\_size} & 0.3 & & 0.2 & \\
-		\texttt{pyxit\_max\_size} & 0.4 & & 0.4 & \\
-		\texttt{colorspace} & HSV & & HSV & \\
-		\texttt{min\_sample\_split} & 1 & & 67 & 232\\
-		\texttt{max\_features} & 1 & & 1 & \\ 
+		\texttt{pyxit\_min\_size} & 0.6 & 0.7 & 0.6 & \\
+		\texttt{pyxit\_max\_size} & 0.8 & 0.8 & 0.8 & \\
+		\texttt{colorspace} & HSV & HSV & HSV & \\
+		\texttt{min\_sample\_split} & 1 & 1 & 108 & 232\\
+		\texttt{max\_features} & 1 & 1 & 1 & \\ 
 		\texttt{C} & / & / & 0.1 & \\
 		\hline
 	\end{tabular}
@@ -547,8 +597,8 @@ While for the pattern classifer, only objects from the \textit{Pattern} subcateg
 			\hline 
 			& \multicolumn{2}{c}{Normal} & \multicolumn{2}{c|}{Prolif.} \\
 			\hline
-			Normal &  & \tiny (30.45\%) &  & \tiny (11.39\%)\\
-			Prolif. & & \tiny (1.96\%) &  & \tiny (56.19\%)\\
+			Normal & 938 & \tiny (81.00\%) & 5 & \tiny (0.43\%)\\
+			Prolif. & 186 & \tiny (16.06\%) & 29 & \tiny (2.50\%)\\
 			\hline
 		\end{tabular}
 	} \\
@@ -567,8 +617,8 @@ While for the pattern classifer, only objects from the \textit{Pattern} subcateg
 			\hline 
 			& \multicolumn{2}{c}{Normal} & \multicolumn{2}{c|}{Prolif.} \\
 			\hline
-			Normal &  & \tiny (30.45\%) & & \tiny (11.39\%)\\
-			Prolif. &  & \tiny (1.96\%) &  & \tiny (56.19\%)\\
+			Normal & 881 & \tiny (76.08\%) & 62 & \tiny (5.35\%)\\
+			Prolif. & 109 & \tiny (9.41\%) & 106 & \tiny (9.15\%)\\
 			\hline
 		\end{tabular}
 	}
@@ -586,27 +636,62 @@ The dispatching classifier is a ternary model which predicts from the image of a
 	\item Output \textit{other} (class 2): terms \textit{background}, \textit{artefact}, \textit{macrophage}, \textit{polynuclear} and \textit{colloid}
 \end{itemize}
 
-Most terms associated outputs are expected. However, it is worth noting that, on the one hand, the polynuclear term was placed in the \textit{Other} output and that, on the other hand, the \textit{red blood cell} term was left in cell. As far as \textit{polynuclear} is concerned, it was placed there because it is not a cell and therefore shouldn't be dispatched to the cell classifier. While \textit{red blood cells} are cells, they are not the same kind of cells than the ones that are processed by the cell classifier. However, they were left in the \textit{cell} output because they look like cells with inclusion.
+Most terms' associated outputs are expected. However, it is worth noting that, on the one hand, the polynuclear term was placed in the \textit{Other} output and that, on the other hand, the \textit{red blood cell} term was left in cell. As far as \textit{polynuclear} is concerned, it is not a cell and therefore shouldn't be dispatched to the cell classifier. While \textit{red blood cells} are cells, they are not the same kind of cells than the ones that are processed by the cell classifier. However, they were left in the \textit{cell} output because they look like cells with inclusion.
 
 As shown in Table \ref{tab:dispatch_classif_dataset_size}, the term repartition induces an imbalance. The class \textit{Other} is particularly under-represented. However, the imbalance is not as critical as for the cell classifier. 
+As far as the parameters are concerned, the windows sizes couldn't be chosen from a particular range as the classifier handles both small and big objects.
 
-While the dimensions of the subwindows could be guessed for the other classifiers, they couldn't be for this one. Indeed, this classifier processes both small and big objects. 
+The best models' performances are given in Table \ref{tab:dispatch_classif_best_scores}. A first observation is that all the models seem to be relatively good at dispatching cells and patterns. However, they fail at dispatching other objects as such. This is particularly true for the ET-DIC variant without reviewed annotations which classifies all the other objects as cells or patterns. The addition of reviewed annotations brings a slight improvement as 4 \% of the other objects are classified as such.
+
+The ET-FL variant brings a non-negligible improvement as for the classification of other objects as 46 \% of those are correctly classified. This model also classifies the patterns more precisely as only 4 \% are misclassified against 11 \% with the ET-DIC variant. 
+
+\textbf{TODO ET-FL (reviewed)}
+At the price of a slight degradation of the ...
 
 \begin{table}
 	\small
 	\center
-	\begin{tabular}{|c|cc|cc|cc|cc|}
-		\hline
-		& \multicolumn{2}{|c|}{Pattern} & \multicolumn{2}{c|}{Cell} & \multicolumn{2}{c|}{Other} & \multicolumn{2}{c|}{Total}\\
-		\hline		
-		LS & 1349 & \tiny (32.94\%) & 1973 & \tiny (48.18\%) & 773 & \tiny (18.88\%) & 4095 & \tiny (69.16\%)\\
-		TS & 510 & \tiny (27.93\%) & 1110 & \tiny (60.79\%) & 206 & \tiny (11.28\%) & 2435 & \tiny (30.84\%)\\
-		\hline		
-		Total & 1859 & \tiny (31.4\%) & 3083 & \tiny (52.07\%) & 979 & \tiny (0.1653\%) & \multicolumn{2}{c|}{}\\
-		\hline
-	\end{tabular}
+	\subfigure [Experts' annotations] {
+		\begin{tabular}{|c|cc|cc|cc|cc|}
+			\hline
+			& \multicolumn{2}{|c|}{Pattern} & \multicolumn{2}{c|}{Cell} & \multicolumn{2}{c|}{Other} & \multicolumn{2}{c|}{Total}\\
+			\hline		
+			LS & 1349 & \tiny (32.94\%) & 1973 & \tiny (48.18\%) & 773 & \tiny (18.88\%) & 4095 & \tiny (69.16\%)\\
+			TS & 510 & \tiny (27.93\%) & 1110 & \tiny (60.79\%) & 206 & \tiny (11.28\%) & 2435 & \tiny (30.84\%)\\
+			\hline		
+			Total & 1859 & \tiny (31.4\%) & 3083 & \tiny (52.07\%) & 979 & \tiny (0.1653\%) & \multicolumn{2}{c|}{}\\
+			\hline
+		\end{tabular}
+	}
+	\subfigure [Reviewed] {
+		\begin{tabular}{|c|cc|cc|cc|cc|}
+			\hline
+			& \multicolumn{2}{|c|}{Pattern} & \multicolumn{2}{c|}{Cell} & \multicolumn{2}{c|}{Other} & \multicolumn{2}{c|}{Total}\\
+			\hline		
+			LS & 1511 & \tiny (25.94\%) & 2950 & \tiny (50.64\%) & 1364 & \tiny (23.42\%) & 4095 & \tiny (76.13\%)\\
+			TS & 510 & \tiny (27.93\%) & 1110 & \tiny (60.79\%) & 206 & \tiny (11.28\%) & 2435 & \tiny (23.87\%)\\
+			\hline		
+			Total & 2021 & \tiny (26.41\%) & 4060 & \tiny (53.06\%) & 1570 & \tiny (20.52\%) & \multicolumn{2}{c|}{}\\
+			\hline
+		\end{tabular}
+	}
 	\caption{Dispatch classifier. Dataset size.}
 	\label{tab:dispatch_classif_dataset_size}
+\end{table}
+
+\begin{table}
+	\small
+	\center 
+	\begin{tabular}{|c|cc|cc|}
+		\hline
+		& ET-DIC & ET-DIC (r) & ET-FL & ET-FL (r) \\
+		\hline
+		LS & 0.8352 & 0.7428 & 0.8991 & \\
+		TS & 0.8498 & 0.8504 & 0.8910 & \\
+		\hline
+	\end{tabular}
+	\caption{Dispatch classifier. Best model's performance (the metrics is \textit{accuracy}).}
+	\label{tab:dispatch_classif_best_scores}
 \end{table}
 
 \begin{table}
@@ -628,9 +713,9 @@ While the dimensions of the subwindows could be guessed for the other classifier
 			\hline 
 			& \multicolumn{2}{c}{Pattern} & \multicolumn{2}{c}{Cell} & \multicolumn{2}{c|}{Other} \\
 			\hline
-			Pattern & 937 & \tiny (80.92\%) & 6 & \tiny (0.52\%) & 6 & \tiny (0.52\%)\\
-			Cell & 187 & \tiny (16.15\%) & 28 & \tiny (2.42\%) & 28 & \tiny (2.42\%)\\
-			Other & 187 & \tiny (16.15\%) & 28 & \tiny (2.42\%) & 28 & \tiny (2.42\%) \\
+			Pattern & 460 & \tiny (25.21\%) & 41 & \tiny (2.25\%) & 5 & \tiny (0.49\%)\\
+			Cell & 22 & \tiny (1.21\%) & 1084 & \tiny (59.40\%) & 3 & \tiny (0.16\%)\\
+			Other & 36 & \tiny (1.97\%) & 162 & \tiny (8.88\%) & 8 & \tiny (0.44\%) \\
 			\hline
 		\end{tabular}
 	} \\
@@ -658,6 +743,25 @@ While the dimensions of the subwindows could be guessed for the other classifier
 	}
 	\caption{Dispatch classifier. Confusion matrices.}
 	\label{tab:dispatch_classif_conf_mat}
+\end{table}
+
+\begin{table}
+	\small
+	\center 
+	\begin{tabular}{|c|c|c|c|c|}
+		\hline
+		Parameters & ET-DIC & ET-DIC (r) & ET-FL & ET-FL (r) \\
+		\hline		
+		\texttt{pyxit\_min\_size} & 0.5 & 0.5 & 0.3 & \\
+		\texttt{pyxit\_max\_size} & 0.8 & 0.8 & 0.8 & \\
+		\texttt{colorspace} & TRGB & TRGB & HSV & \\
+		\texttt{min\_sample\_split} & 1 & 1 & 91 & 232\\
+		\texttt{max\_features} & 1 & 1 & 1 & \\ 
+		\texttt{C} & / & / & 1.0 & \\
+		\hline
+	\end{tabular}
+	\caption{Dispatch classifier. Best model's parameters.}
+	\label{tab:dispatch_classif_best_params}
 \end{table}
 
 \subsection{Execution times}
