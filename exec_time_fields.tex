@@ -1,0 +1,162 @@
+\label{app:exec_times}
+In Tables \ref{tab:perf_time_size_and_jobs}, ..., are given detailed execution times for executions of the workflow on several images. All execution times are given in seconds. More details about the fields of those tables are given hereafter:
+
+\begin{enumerate}
+	\item \textbf{Run information}: global information about the run
+	\begin{itemize}
+		\item \textit{Run number}: a number associated with the execution in order to ease referencing those runs in the thesis
+		\item \textit{Image width and height}: width and height (in pixels) of the image processed by the run
+		\item \textit{Tile width and height}: width and height (in pixels) of the tiles used by the tile topology to break down the images in smaller chunks
+		\item \textit{Tiles}: number of tiles containing in the topology
+		\item \textit{Jobs}: number of processed assigned to the execution
+		\item \textit{RAM}: maximum amount of memory available for the run to execute
+	\end{itemize}
+	\item \textbf{Polygons}: information about the polygons found by the run
+	\begin{itemize}
+		\item \textit{Found}: number of polygons found across all tiles 
+		\item \textit{Merged}: number of polygons resulting from the merging phase
+		\item \textit{Cell}: number of polygons dispatched to the cell classifier
+		\item \textit{Pattern}: number of polygons dispatched to the pattern classifier
+		\item \textit{Dispatched}: total number of dispatched polygons
+	\end{itemize}
+	\item \textbf{L-S-L}: execution times of the \textbf{L}oad-\textbf{S}egment-\textbf{L}ocate phase. This phase is parallelized.
+	\begin{itemize}
+		\item \textit{Loading}: total amount of time for loading tiles into memory (on separate processes)
+		\item \textit{Segment}: total amount of time for segmenting the tiles (on separate processes)
+		\item \textit{Location}: total amount of time for locating polygons in segmented tiles (on separate processes)
+		\item \textit{Overall}: actual amount of time for processing all the tiles (wall-clock time)
+	\end{itemize}
+	\item \textbf{Dispatching}: execution times of the dispatching phase
+	\begin{itemize}
+		\item \textit{Cell model}: variant of the random subwindows algorithm used for dispatching polygons
+		\item \textit{Fetch 1}: times needed for fetching the crops of the polygons to dispatch from the Cytomine server
+		\item \textit{Cells}: amount of time needed for finding whether the polygons should be dispatched to the cell classifier or not
+		\item \textit{Fetch 2}: time needed for fetching the crops of the polygons to dispatch to the pattern classifier. Normally, it should always be small as all the crops have already been downloaded and cached by the\textit{Fetch 1} step
+		\item \textit{Patterns}: amount of time for finding whether the polygons should be dispatched to the pattern classifier or not
+		\item \textit{Overall}: total amount of time for dispatching the polygons 
+	\end{itemize}
+	\item \textbf{Classification}: execution times of the classification phase
+	\begin{itemize}
+		\item \textit{Fetch 3}: times needed for fetching the crops of the polygons to be processed by the cell classifier. As for \textit{Fetch 2}, those times should be low. 
+		\item \textit{Cells}: amount of time for classifying the cells 
+		\item \textit{Fetch 4}: times needed for fetching the crops of the polygons to be processed by the cell classifier. As for \textit{Fetch 2}, those times should be low.
+		\item \textit{Patterns}: amount of time for classifying patterns
+		\item \textit{Overall}: total amount of time for classifying the dispatched polygons
+	\end{itemize}
+	\item \textbf{Net.}: for \textit{Network}, time spent for sending network requests and waiting for responses
+	\begin{itemize}
+		\item \textit{Caching}: amount of time needed for fetching and caching the tiles of the topology
+		\item \textit{Upload}: amount of time needed for uploading the dispatched polygons to the Cytomine server
+	\end{itemize}
+	\item \textbf{Total}: 
+	\begin{itemize}
+		\item \textit{Not net. 1}: total execution time of the run from which was deduced the \textit{Caching} and \textit{Upload} execution times. 
+		\item \textit{Not net. 2}: total execution time of the run from which was deduced the \textit{Caching}, \textit{Upload}, \textit{Fetch 1}, \textit{Fetch 2}, \textit{Fetch 3} and \textit{Fetch 4} execution times
+		\item \textit{Overall}: total execution time of the run. Might not equal the sum of the various steps executions times. Indeed, some operations performed between those steps are not included in the corresponding execution times
+	\end{itemize}		
+	
+\end{enumerate}
+
+\begin{table}
+	\footnotesize
+	\center
+	\begin{tabular}{|c|c|c|c|c|c|c|c|}
+		\hline
+		\parbox[t]{2mm}{\multirow{9}{*}{\rotatebox[origin=c]{90}{Run information}}} & Run nb. & 1 & 2 & 3 & 4 & 5 & 6 \\
+		& Image & 728725 & 728725 & 728725 & 728725 & 728725 & 728725 \\
+		& Width & 131072 & 131072 & 131072 & 131072 & 131072 & 131072 \\
+		& Height & 57856 & 57856 & 57856 & 57856 & 57856 & 57856 \\
+		& Tile width & 512 & 512 & 512 & 1024 & 1024 & 1024 \\
+		& Tile height & 512 & 512 & 512 & 1024 & 1024 & 1024 \\
+		& Tiles & 29900 & 29900 & 29900 & 7353 & 7353 & 7353 \\
+		& Jobs & 16 & 32 & 64 & 16 & 32 & 64 \\
+		& RAM (Go) & 100 & 100 & 100 & 100 & 100 & 100 \\
+		&  &  &  &  &  &  & \\
+		\parbox[t]{2mm}{\multirow{5}{*}{\rotatebox[origin=c]{90}{Polygons}}} & Found & 10009 & 10009 & 10009 & 8418 & 8418 & 8418 \\
+		& Merged & 7294 & 7294 & 7294 & 7195 & 7195 & 7195 \\
+		& Cell & 5172 & 5169 & 5169 & 5141 & 5118 & 5128 \\
+		& Pattern & 1581 & 1567 & 1572 & 1528 & 1540 & 1554 \\
+		& Dispatched & 6753 & 6736 & 6741 & 6669 & 6658 & 6682 \\
+		&  &  &  &  &  &  & \\
+		\parbox[t]{2mm}{\multirow{4}{*}{\rotatebox[origin=c]{90}{LSL}}} & Loading & 593.145 & 1544.394 & 773.857 & 537.775 & 951.596 & 1210.165 \\
+		& Segment & 4801.758 & 6736.784 & 7321.667 & 5148.477 & 7376.851 & 7757.463 \\
+		& Location & 2083.925 & 2492.705 & 2472.753 & 2033.105 & 2427.312 & 2690.361 \\		
+		& \textbf{Overall} & \textbf{476.952} & \textbf{348.405} & \textbf{199.245} & \textbf{536.385} & \textbf{351.635} & \textbf{206.755} \\
+		&  &  &  &  &  &  & \\
+		& Merging & 14.324 & 14.451 & 18.086 & 40.640 & 40.605 & 40.774 \\
+		&  &  &  &  &  &  & \\
+		\parbox[t]{2mm}{\multirow{6}{*}{\rotatebox[origin=c]{90}{Dispatching}}} & Model & ET-FL & ET-FL & ET-FL & ET-FL & ET-FL & ET-FL \\
+		& Fetch 1 & 251.098 & 5.148 & 1.678 & 108.064 & 5.766 & 1.485 \\
+		& Cells & 765.858 & 758.031 & 739.323 & 762.242 & 758.993 & 741.434 \\
+		& Fetch 2 & 0.750 & 1.079 & 0.959 & 1.077 & 0.860 & 0.830 \\
+		& Patterns & 112.861 & 140.930 & 135.782 & 142.667 & 141.502 & 137.354 \\
+		& \textbf{Overall} & \textbf{1130.706} & \textbf{905.329} & \textbf{877.897} & \textbf{1014.201} & \textbf{907.267} & \textbf{881.252} \\
+		&  &  &  &  &  &  & \\
+		\parbox[t]{2mm}{\multirow{7}{*}{\rotatebox[origin=c]{90}{Classification}}} & Model & ET-DIC & ET-DIC & ET-DIC & ET-DIC & ET-DIC & ET-DIC \\
+		& Fetch 3 & 1.372 & 1.602 & 1.664 & 1.200 & 1.431 & 1.167 \\
+		& Cells & 19.248 & 14.213 & 12.614 & 20.849 & 14.141 & 12.165 \\
+		& Model & ET-DIC & ET-DIC & ET-DIC & ET-DIC & ET-DIC & ET-DIC \\
+		& Fetch 4 & 0.667 & 0.729 & 0.851 & 0.582 & 0.781 & 0.623 \\
+		& Patterns & 7.527 & 5.639 & 4.978 & 7.465 & 5.212 & 5.136 \\
+		& \textbf{Overall} & \textbf{28.865} & \textbf{22.240} & \textbf{20.162} & \textbf{30.149} & \textbf{21.622} & \textbf{19.149} \\
+		&  &  &  &  &  &  & \\
+		\parbox[t]{2mm}{\multirow{2}{*}{\rotatebox[origin=c]{90}{Net.}}} & Caching & 6193.270 & 27.953 & 4.178 & 3858.679 & 10.786 & 4.255 \\
+		& Upload & 4993.832 & 444.564 & 444.000 & 4039.734 & 471.113 & 435.173 \\
+		&  &  &  &  &  &  & \\
+		\parbox[t]{2mm}{\multirow{3}{*}{\rotatebox[origin=c]{90}{Total}}} & Not net. 1 & 1652.464 & 1291.571 & 1116.922 & 1621.971 & 1321.591 & 1148.385 \\
+		& Not net. 2 & 6646.296 & 1736.134 & 1560.921 & 5661.706 & 1792.703 & 1583.558 \\
+		& \textbf{Overall} & \textbf{12839.566} & \textbf{1764.088} & \textbf{1565.100} & \textbf{9520.385} & \textbf{1803.489} & \textbf{1587.814} \\
+		\hline
+	\end{tabular}
+	\caption{Effects of varying the tile sizes and the available number processes on the execution times. Test image (728725) has dimensions $728725 \times 131072$.}
+	\label{tab:perf_time_size_and_jobs}
+\end{table}
+
+\begin{table}
+	\footnotesize
+	\center 
+	\begin{tabular}{|c|c|c|c|c|c|c|c|}
+		\hline
+		\parbox[t]{2mm}{\multirow{8}{*}{\rotatebox[origin=c]{90}{Run information}}} & Run nb. & 1 & 2 & 3 & 4 & 5 & 6 \\
+		\cline{2-8}		
+		& Image & 716528 & 728725 & 728725 & 728725 & 8120444 & 8120444\\
+		& Width & 163840 & 131072 & 131072 & 131072 & 172032 & 172032\\
+		& Height & 95744 & 57856 & 57856 & 57856 & 104704 & 104704\\
+		& Tile width & 512 & 1024 & 1024 & 512 & 1024 & 1024\\
+		& Tile height & 512 & 1024 & 1024 & 512 & 1024 & 1024\\
+		& Tiles & 61750 & 7353 & 7353 & 29900 & 17510 & 17510\\
+		& Jobs & 16 & 16 & 16 & 16 & 100 & 100\\
+		& RAM {\tiny(Go)} & 32 & 32 & 32 & 100 & 1000 & 1000\\
+		&  &  &  &  &  &  & \\ 
+		\parbox[t]{2mm}{\multirow{5}{*}{\rotatebox[origin=c]{90}{Polygons}}} & Found & 49442 & 8385 & 8385 & 9998 & 201974 & 202853\\
+		& Merged & 42573 & 7164 & 7164 & 7330 & 183782 & 183992\\
+		& Cell & 81 & 149 & 2468 & 2755 & / & 109510\\
+		& Pattern & 2384 & 833 & 1077 & 1393 & / & 28960\\
+		& Dispatched & 2465 & 982 & 3545 & 4148 & 174389 & 138470\\
+		&  &  &  &  &  &  & \\
+		\parbox[t]{2mm}{\multirow{4}{*}{\rotatebox[origin=c]{90}{LSL}}} & Loading & 129001.7494 & 53514.2437 & 53710.7671 & 20688.7785 & 247867.2302 & 247462.9641\\
+		& Segment & 9485.1414 & 4743.8858 & 4719.1849 & 6713.7414 & 10068.0100 & 9896.3807\\
+		& Location & 4209.0709 & 1971.8888 & 1961.1859 & 2738.4343 & 4458.5427 & 4471.3817\\
+		& \textbf{Overall} & \textbf{9158.3703} & \textbf{3829.1936} & \textbf{3835.3665} & \textbf{1930.2026} & \textbf{2686.0573} & 2724.0464\\
+		&  &  &  &  &  &  &  \\
+		& Merging & 91.0140 & 57.6108 & 57.7504 & 36.0167 & 2052.1225 & 1972.3464\\
+		&  &  &  &  &  &  &  \\
+		\parbox[t]{2mm}{\multirow{6}{*}{\rotatebox[origin=c]{90}{Dispatching}}} & Model & ET-FL (r.) & ET-FL & ET-FL & ET-FL & ET-FL & ET-DIC\\
+		& Fetch 1 & 313.2474 & 146.9693 & 102.1281 & 234.7505 & 19962.1771 & 8697.8838\\
+		& Cells  & 288.3571 & 92.5044 & 493.3059 & 607.5096 & 56615.5098 & 381.4897\\
+		& Fetch 2 & 1.2727 & 0.4469 & 0.6815 & 1.0183 & 124.6983 & 153.0141\\
+		& Patterns & 279.2642 & 73.3186 & 156.8081 & 153.6380 & 348.1110 & 155.1389\\
+		& \textbf{Overall} & \textbf{883.0553} & \textbf{313.4013} & \textbf{753.0886} & \textbf{997.1051} & \textbf{81731.1864} & \textbf{9391.5655}\\
+		&  &  &  &  &  &  &  \\
+		\parbox[t]{2mm}{\multirow{5}{*}{\rotatebox[origin=c]{90}{Classification}}} & Fetch 3 & 0.5211 & 0.2369 & 0.6788 & 1.0994 & 124.6983 & 20.2389\\
+		& Cells & 1.0911 & 1.1579 & 10.7008 & 12.6491 & 277.9153 & 235.6081\\
+		& Fetch 4 & 0.9426 & 0.4519 & 0.4557 & 1.0570 & 348.1110 & 145.5594\\
+		& Patterns & 13.2939 & 6.3793 & 7.2864 & 10.1172 & 37.3042 & 50.3971\\
+		& \textbf{Overall} & \textbf{15.8702} & \textbf{8.2355} & \textbf{19.1502} & \textbf{24.9634} & \textbf{811.8941} & \textbf{452.8960}\\
+		&  &  &  &  &  &  &  \\
+		& Upload & 5661.45 & 290.23 & 2431.7649 & 345.5561 & 28151.8883 & 8588.6074 \\
+		\hline
+	\end{tabular}
+	\caption{Cytomine server}
+	\label{tab:execution_times}
+\end{table}
