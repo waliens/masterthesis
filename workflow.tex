@@ -505,5 +505,20 @@ workflow = builder.get()
 results = workflow.process(NumpyImage(image))
 \end{python}
 
-\section{Improvements and future works}
+\section{Improvements and future work}
+This section presents some possible improvements that could be performed to increase the ease of use and the performances of the framework. 
+
+\subsection{Memory management}
+Under the hood, Python wraps everything into objects \cite{pythonleaks2016}. This includes primitive types such as integers. Moreover, as memory allocation is an expensive operation, those objects are pooled by the Python runtime. Especially, it stores list of free objects which can be re-used when the user implicitly request them. The problem is that the free objects in those lists are never released and therefore, from the operating system point of view, the memory needed by the program only increases. It might worth checking the impact of this memory management policy over the memory consumption of the framework. Especially, it if happens to be a problem, the framework should be analyzed to check which parts yield a high memory consumption and those parts should be re-written.
+
+\subsection{Location algorithm}
+The location algorithm sometimes fails at generating polygons for all the detected objects in the segmentation mask. This happens when some objects' masks are ill-formed yielding invalid polygon containing self-intersections. A self-intersection is a point where two edges of a polygon intersect or are colinear. A first procedure for cleaning the segmentation mask has been implemented but it seems not be sufficient to prevent invalid polygons to be generated. An improvement would therefore consists in understanding which kind of patterns cause those self-intersections to be generated and to implement a procedure for cleaning those patterns. 
+
+\subsection{Parallelization}
+Parallelization was successfully applied for tiles segmentation and location but other phases of the workflow might also benefit from it. For instance, when the dispatching and classification procedures cannot be parallelized by the implementer, those steps are executed sequentially no matter what. This can present a major issue especially when the number of objects found in the image is high. A possible improvement would consist in splitting the detected objects in batches and to execute dispatching and classification for each batch on different processes. 
+
+Another critical point is the workflow executor. Indeed, when the implementer implements a processing chain, the first executor typically processes the full image and the parallelization can happen at the workflow level. According to the number of objects detected by this first step, the subsequent executors might generate a lot of image windows to be processed by other workflows. Currently, all those windows must be processed sequentially which can potentially yield huge execution times. An improvement would then consist in parallelizing those windows processing. This would have to be implemented carefully as this parallelization shouldn't clash with the one implemented at the workflow level (see Section \ref{sssec:work_parallel} for the nested parallel loops issue.
+
+Finally, it would be interesting to optimize the parallelization of the tiles processing. Currently, batches of tile objects are passed to the processes which requires a potentially heavy serialization. Indeed, tiles being defined by the implementer, he could stores heavy objects in the class attributes. A possible improvement would therefore consist in passing batches of tiles identifiers instead of the tile themselves and to use the tile topology to re-build the tiles on each process. 
+
 \label{sec:work_improvements}
