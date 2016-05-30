@@ -1,4 +1,4 @@
-\label{app:parameters}
+\label{app:cross_val}
 
 This chapter presents the parameters that were tuned by the cross-validation procedure presented in Section \ref{sssec:thyroid_cv}. Each classifier was built using the two variants of the random subwindows algorithm , ET-FL and ET-DIC, and for each variant, the model was learned on two different learning sets: one with the reviewed annotations and one without. The complete lists of parameters are given in Figure \ref{tab:app_disp_classif_tuned} for the dispatching classifier, in Figure \ref{tab:app_cell_classif_tuned} for the cell classifier and in Figure \ref{tab:app_pattern_classif_tuned} for the pattern classifier.
 
@@ -21,6 +21,25 @@ This chapter presents the parameters that were tuned by the cross-validation pro
 \end{table}
 
 \begin{table}
+	\small
+	\center 
+	\begin{tabular}{|c|c|c|c|c|}
+		\hline
+		Parameters & ET-DIC & ET-DIC (r) & ET-FL & ET-FL (r) \\
+		\hline		
+		\texttt{pyxit\_min\_size} & 0.5 & 0.5 & 0.3 & \\
+		\texttt{pyxit\_max\_size} & 0.8 & 0.8 & 0.8 & \\
+		\texttt{colorspace} & TRGB & TRGB & HSV & \\
+		\texttt{min\_sample\_split} & 1 & 1 & 91 & 232\\
+		\texttt{max\_features} & 1 & 1 & 1 & \\ 
+		\texttt{C} & / & / & 1.0 & \\
+		\hline
+	\end{tabular}
+	\caption{Dispatch classifier. Best model's parameters.}
+	\label{tab:dispatch_classif_best_params}
+\end{table}
+
+\begin{table}
 	\center 
 	\begin{tabular}{|c|cccc|}
 		\hline
@@ -38,6 +57,24 @@ This chapter presents the parameters that were tuned by the cross-validation pro
 	\label{tab:app_cell_classif_tuned}
 \end{table}
 
+\begin{table}
+	\small
+	\center 
+	\begin{tabular}{|c|c|c|c|c|}
+		\hline
+		Parameters & ET-DIC & ET-DIC (r) & ET-FL & ET-FL (r) \\
+		\hline		
+		\texttt{pyxit\_min\_size} & 0.6 & 0.7 & 0.6 & \\
+		\texttt{pyxit\_max\_size} & 0.8 & 0.8 & 0.8 & \\
+		\texttt{colorspace} & HSV & HSV & HSV & \\
+		\texttt{min\_sample\_split} & 1 & 1 & 108 & 232\\
+		\texttt{max\_features} & 1 & 1 & 1 & \\ 
+		\texttt{C} & / & / & 0.1 & \\
+		\hline
+	\end{tabular}
+	\caption{Cell classifier. Best model's parameters.}
+	\label{tab:cell_classif_best_params}
+\end{table}
 
 \begin{table}
 	\center 
@@ -57,3 +94,166 @@ This chapter presents the parameters that were tuned by the cross-validation pro
 	\label{tab:app_pattern_classif_tuned}
 \end{table}
 
+\begin{table}
+	\small
+	\center 
+	\begin{tabular}{|c|c|c|c|c|}
+		\hline
+		Parameters & ET-DIC & ET-DIC (r) & ET-FL & ET-FL (r) \\
+		\hline		
+		\texttt{pyxit\_min\_size} & 0.3 & 0.2 & 0.2 & 0.2\\
+		\texttt{pyxit\_max\_size} & 0.4 & 0.4 & 0.4 & 0.4 \\
+		\texttt{colorspace} & HSV & HSV & HSV & HSV \\
+		\texttt{min\_sample\_split} & 1 & 1 & 67 & 76 \\
+		\texttt{max\_features} & 1 & 1 & 1 & 1 \\ 
+		\texttt{C} & / & / & 0.1 & 1.0 \\
+		\hline
+	\end{tabular}
+	\caption{Pattern classifier. Best model's parameters.}
+	\label{tab:pattern_classif_best_params}
+\end{table}
+
+\begin{table}
+	\small
+	\center
+	\subfigure [ET-DIC] {
+		\begin{tabular}{|c|rcrc|}
+			\hline 
+			& \multicolumn{2}{c}{Normal} & \multicolumn{2}{c|}{Prolif.} \\
+			\hline
+			Normal & 155 & \tiny (30.45\%) & 58 & \tiny (11.39\%)\\
+			Prolif. & 10 & \tiny (1.96\%) & 286 & \tiny (56.19\%)\\
+			\hline
+		\end{tabular}
+	}
+	\subfigure [ET-DIC (reviewed)] {
+		\begin{tabular}{|c|rcrc|}
+			\hline 
+			& \multicolumn{2}{c}{Normal} & \multicolumn{2}{c|}{Prolif.} \\
+			\hline
+			Normal & 146 & \tiny (28.68\%) & 67 & \tiny (13.16\%)\\
+			Prolif. & 11 & \tiny (2.16\%) & 287 & \tiny (55.99\%)\\
+			\hline
+		\end{tabular}
+	} \\
+	\subfigure [ET-FL] {
+		\begin{tabular}{|c|rcrc|}
+			\hline 
+			& \multicolumn{2}{c}{Normal} & \multicolumn{2}{c|}{Prolif.} \\
+			\hline
+			Normal & 156 & \tiny (30.65\%) & 57 & \tiny (11.20\%)\\
+			Prolif. & 11 & \tiny (2.16\%) & 285 & \tiny (55.99\%)\\
+			\hline
+		\end{tabular}
+	}
+	\subfigure [ET-FL (reviewed)] {
+		\begin{tabular}{|c|rcrc|}
+			\hline 
+			& \multicolumn{2}{c}{Normal} & \multicolumn{2}{c|}{Prolif.} \\
+			\hline
+			Normal & 158 & \tiny (31.04\%) & 55 & \tiny (10.81\%)\\
+			Prolif. & 15 & \tiny (2.95\%) & 281 & \tiny (55.21\%)\\
+			\hline
+		\end{tabular}
+	}
+	\caption{Pattern classifier. Confusion matrices.}
+	\label{tab:pattern_classif_conf_mat}
+\end{table}
+
+\begin{table}
+	\small
+	\center
+	\subfigure [ET-DIC] {
+		\begin{tabular}{|c|rcrc|}
+			\hline 
+			& \multicolumn{2}{c}{Normal} & \multicolumn{2}{c|}{Prolif.} \\
+			\hline
+			Normal & 937 & \tiny (80.92\%) & 6 & \tiny (0.52\%)\\
+			Prolif. & 187 & \tiny (16.15\%) & 28 & \tiny (2.42\%)\\
+			\hline
+		\end{tabular}
+	}
+	\subfigure [ET-DIC (reviewed)] {
+		\begin{tabular}{|c|rcrc|}
+			\hline 
+			& \multicolumn{2}{c}{Normal} & \multicolumn{2}{c|}{Prolif.} \\
+			\hline
+			Normal & 938 & \tiny (81.00\%) & 5 & \tiny (0.43\%)\\
+			Prolif. & 186 & \tiny (16.06\%) & 29 & \tiny (2.50\%)\\
+			\hline
+		\end{tabular}
+	} \\
+	\subfigure [ET-FL] {
+		\begin{tabular}{|c|rcrc|}
+			\hline 
+			& \multicolumn{2}{c}{Normal} & \multicolumn{2}{c|}{Prolif.} \\
+			\hline
+			Normal & 910 & \tiny (78.58\%) & 33 & \tiny (2.85\%)\\
+			Prolif. & 118 & \tiny (10.19\%) & 97 & \tiny (8.38\%)\\
+			\hline
+		\end{tabular}
+	}
+	\subfigure [ET-FL (reviewed)] {
+		\begin{tabular}{|c|rcrc|}
+			\hline 
+			& \multicolumn{2}{c}{Normal} & \multicolumn{2}{c|}{Prolif.} \\
+			\hline
+			Normal & 881 & \tiny (76.08\%) & 62 & \tiny (5.35\%)\\
+			Prolif. & 109 & \tiny (9.41\%) & 106 & \tiny (9.15\%)\\
+			\hline
+		\end{tabular}
+	}
+	\caption{Cell classifier. Confusion matrices.}
+	\label{tab:cell_classif_conf_mat}
+\end{table}
+
+\begin{table}
+	\small
+	\center
+	\subfigure [ET-DIC] {
+		\begin{tabular}{|c|rcrcrc|}
+			\hline 
+			& \multicolumn{2}{c}{Pattern} & \multicolumn{2}{c}{Cell} & \multicolumn{2}{c|}{Other} \\
+			\hline
+			Pattern & 453 & \tiny (24.82\%) & 57 & \tiny (3.12\%) & 0 & \tiny (0.0\%)\\
+			Cell & 11 & \tiny (0.60\%) & 1098 & \tiny (60.16\%) & 0 & \tiny (0.0\%)\\
+			Other & 34 & \tiny (1.86\%) & 172 & \tiny (9.42\%) & 0 & \tiny (0.0\%) \\
+			\hline
+		\end{tabular}
+	}
+	\subfigure [ET-DIC (reviewed)] {
+		\begin{tabular}{|c|rcrcrc|}
+			\hline 
+			& \multicolumn{2}{c}{Pattern} & \multicolumn{2}{c}{Cell} & \multicolumn{2}{c|}{Other} \\
+			\hline
+			Pattern & 460 & \tiny (25.21\%) & 41 & \tiny (2.25\%) & 5 & \tiny (0.49\%)\\
+			Cell & 22 & \tiny (1.21\%) & 1084 & \tiny (59.40\%) & 3 & \tiny (0.16\%)\\
+			Other & 36 & \tiny (1.97\%) & 162 & \tiny (8.88\%) & 8 & \tiny (0.44\%) \\
+			\hline
+		\end{tabular}
+	} \\
+	\subfigure [ET-FL] {
+		\begin{tabular}{|c|rcrcrc|}
+			\hline 
+			& \multicolumn{2}{c}{Pattern} & \multicolumn{2}{c}{Cell} & \multicolumn{2}{c|}{Other} \\
+			\hline
+			Pattern & 492 & \tiny (26.96\%) & 12 & \tiny (0.66\%) & 6 & \tiny (0.33\%)\\
+			Cell & 12 & \tiny (0.66\%) & 1045 & \tiny (57.26\%) & 52 & \tiny (2.85\%)\\
+			Other & 30 & \tiny (1.64\%) & 87 & \tiny (4.77\%) & 89 & \tiny (4.88\%) \\
+			\hline
+		\end{tabular}
+	}
+	\subfigure [ET-FL (reviewed)] {
+		\begin{tabular}{|c|rcrcrc|}
+			\hline 
+			& \multicolumn{2}{c}{Pattern} & \multicolumn{2}{c}{Cell} & \multicolumn{2}{c|}{Other} \\
+			\hline
+			Pattern & 468 & \tiny (25.64\%) & 16 & \tiny (0.88\%) & 26 & \tiny (1.42\%)\\
+			Cell & 29 & \tiny (1.59\%) & 1018 & \tiny (55.78\%) & 62 & \tiny (3.40\%)\\
+			Other & 23 & \tiny (1.26\%) & 63 & \tiny (3.45\%) & 120 & \tiny (6.58\%) \\
+			\hline
+		\end{tabular}
+	}
+	\caption{Dispatch classifier. Confusion matrices.}
+	\label{tab:dispatch_classif_conf_mat}
+\end{table}
