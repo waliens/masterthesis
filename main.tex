@@ -15,6 +15,7 @@
 \usepackage{color}
 \usepackage{subfigure}
 \usepackage{multirow}
+\usepackage{enumitem}
 
 \newtheorem{algorithm}{Algorithm}
 \newtheorem{definition}{Definition}
@@ -22,6 +23,7 @@
 \setcounter{secnumdepth}{3} % include subsubsection in section numbering
 \setcounter{tocdepth}{3} % include subsubsection in toc
 
+\setitemize{itemsep=1pt} % reduce vertical spacing
 
 %% Create python environment
 %% http://tex.stackexchange.com/questions/199375/problem-with-listings-package-for-python-syntax-coloring
@@ -59,7 +61,6 @@
 %\usepackage{slashbox}
 %\usepackage{pdflscape}
 %\usepackage{cancel}
-%\usepackage{enumitem}
 %\setlist[itemize,1]{label=$\bullet$}
 
 %% Add bibliography database
@@ -79,6 +80,8 @@
 	\newpage
 	
 	% Start table of content ==================
+	\clearpage
+	\setcounter{page}{1}
 	\tableofcontents
 	% End table of content ====================
 	
@@ -97,7 +100,6 @@
 	% End acknowledgement =====================
 	
 	% Start introduction ======================
-	\setcounter{page}{1}
 	\chapter{Introduction}
 	\input{introduction.tex}
 	\newpage
@@ -134,29 +136,29 @@
 	\newpage
 	% End tile topology appendix ==============
 	
-    % Start ontology ===================
+    % Start ontology ==========================
 	\chapter{Ontology}
 	\input{ontology.tex}
 	\newpage
-	% End ontology =====================
+	% End ontology ============================
 	
-	% Start Pyxit ===================
+	% Start Pyxit =============================
 	\chapter{Random subwindows}
 	\input{pixit.tex}
 	\newpage
-	% End Pyxit =====================
+	% End Pyxit ===============================
 	
-	% Start Cross validation parameters =
-	\chapter{Cross validation parameters}
+	% Start Cross validation ==================
+	\chapter{Cross validation}
 	\input{cross_val.tex}
 	\newpage
-	% End Cross validation parameters ===
+	% End Cross validation ====================
 	
-	% Start Performance table ======
+	% Start Performance table =================
 	\chapter{Execution times}
 	\input{exec_time_fields.tex}
 	\newpage
-	% End Performance table ========
+	% End Performance table ===================
 	
 	% Start list of figures ===================
 	%\chapter*{Notations}
