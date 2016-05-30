@@ -299,7 +299,7 @@ In order to implement the re-segmentation, the chaining package must be used. Fi
 \subsection{Classification models}
 \label{ssec:thyroid_perf_models}
 
-As explained in Section \ref{sec:thyroid_adeblire_algo}, three classifiers are used by the workflow. The first detects whether an object is a cell, a pattern or another type of object. The second classifies patterns as proliferative or non-proliferative and the last detects whether cells contain an inclusion or not. The roles of these classifiers are illustrated in Figure \ref{fig:summary_classif}. Information about them including the terms associated with the classes, the performances of the models,... are given in Sections \ref{sssec:general_classif}, \ref{sssec:thyroid_pattern_model}, \ref{sssec:thyroid_cell_model} and \ref{sssec:thyroid_disp_model}. Before exploring the classifiers, the methodology followed for assessing the models is presented in Sections \ref{sssec:thyroid_test_set} and \ref{sssec:thyroid_cv}.
+As explained in Section \ref{sec:thyroid_adeblire_algo}, three classifiers are used by the workflow. The first detects whether an object is a cell, a pattern or another type of object. The second classifies patterns as proliferative or non-proliferative and the last detects whether cells contain an inclusion or not. The roles of these classifiers are illustrated in Figure \ref{fig:summary_classif}. As the main goal is to apply the framework to a real problem, those classifiers were chosen quite arbitrarily based on intuition. In the long run, it might be interesting to study a wider range of classifiers and to pick the best. Information about the chosen classifiers including the terms associated with the classes, the performances of the models,... are given in Sections \ref{sssec:general_classif}, \ref{sssec:thyroid_pattern_model}, \ref{sssec:thyroid_cell_model} and \ref{sssec:thyroid_disp_model}. Before exploring the classifiers, the methodology followed for assessing the models is presented in Sections \ref{sssec:thyroid_test_set} and \ref{sssec:thyroid_cv}.
 
 \begin{figure}
 	\center
@@ -433,7 +433,7 @@ The only terms used are the ones from the subcategory \textit{Pattern} as all th
 
 The best models' performances are given in Table \ref{tab:pattern_classif_best_scores} and \ref{tab:pattern_classif_conf_mat}. All models perform relatively well. Especially, almost all models exhibit an impressive recall of 96 \% except for the ET-FL variant with reviewed annotations of which the recall drops to 94 \%.
 
-As the performances are comparable, the model selected to be used for executing the workflow was the ET-DIC variant without reviewed annotations. Especially, it was preferred because it executes faster than the ET-FL variant (see in Section \ref{sssec:perf_first_test_serie}) and also because the model can generate class probabilities.
+As the performances are comparable, the model selected to be used for executing the workflow was the ET-DIC variant without reviewed annotations. Especially, it was preferred because it executes faster than the ET-FL variant (see in Section \ref{sssec:perf_first_test_serie}) and also because the model supports natively generation of class probabilities. While those probabilities can also be computed with the SVM layer, it is not supported and requires further development. 
 
 \begin{table}
 	\small
@@ -668,7 +668,7 @@ As it exhibits the best accuracy, the ET-FL variant without reviewed annotations
 \end{table}
 
 \subsection{Execution times}
-
+\label{ssec:perf_exec_times}
 In order to assess the time performances of the workflow, several tests were performed. The tables containing the execution times can be found in Appendix \ref{app:exec_times}. Each run\footnote{A "run" is an execution of the workflow.} was assigned a number which can be found in the tables. Three series of tests were performed:
 
 \begin{enumerate}
@@ -730,3 +730,25 @@ The impact of the tile dimensions on the execution times of the sub-phases of \t
 \label{sssec:perf_second_test}
 \subsubsection{Second segmentation on the test set}
 \label{sssec:perf_third_test}
+
+\section{Improvements and future works}
+
+In this section are presented tracks that could be followed in order to improve the performances of the workflow both in term of execution times and quality of the information produced (i.e. successful detection of cell with inclusion and proliferative patterns). The improvements could be made at the framework level are presented in Section \ref{sec:work_future_works}.
+
+\subsection{Network overhead}
+The tests performed in Section \ref{ssec:perf_exec_times} have shown that a majority of the execution time of the workflow is spent exchanging information with the Cytomine server. The amount of time needed for downloading the tiles and crops is particularly high. A possible improvement would consist in optimizing the way the workflow communicates with the server. 
+
+\subsection{Segmentation}
+As explained in Section \ref{ssec:segmentation_proc}, the segmentation procedures developed by Antoine Deblire in \cite{adeblire2013} presents some flaws. As segmentation is the step where the detection is actually carried out, it should be as precise as possible. As for the the first procedure, the lack of robustness to staining variation and the under-segmentation should be addressed in priority. As far as the second procedure is concerned, the most important problem is the under-segmentation of cell with inclusions (see Figure \ref{sfig:area_underseg} as it prevents the subsequent steps of the workflow to detect them. The splitting of cells in several objects should also be addressed. 
+
+Fixing those issues might be done by improving the segmentation procedures developed by Antoine Deblire or by switching to a machine learning-based segmentation scheme.
+
+\subsection{Models}
+In order to dispatch polygons and to classify cells and patterns, some classifiers were designed. Especially, this design consisted in defining a certain number of output classes and to assign a set of terms of the ontology to each class. Then, both variants of the random subwindows algorithm were used to build the classifiers and those were assessed on a test set. 
+
+Among the generated models, some performs better than others. This is particularly true for the pattern classifier which seems very efficient at detecting whether a pattern is proliferative. The dispatch classifier also provides good results even if it tends to misclassify objects which are neither pattern, nor cell. As for the cell classifier, it completely fails at detecting whether a cell contains an inclusion or not. However, the models seemed to perform differently on annotations generated by the workflow. For instance, the pattern classifier tends to always classify large patterns as proliferative even if they are not. Also, the dispatcher classifier sometimes miss patterns by classifying the as cells. 
+
+Obviously, improving the classifiers would be very beneficial as it would result in an increased overall accuracy of the workflow. This can be done at several levels. First, it seems that the disparities between annotations made by the workflow and by the experts have an effect on the performances of the models. A possible improvement would be to generate a large dataset containing reviewed workflow annotations and to train and test the models on those annotations.  If it appears that some classes are imbalanced in this dataset, some data augmentation techniques (e.g. rotation, mirroring) could be used to reduce the imbalance.  
+
+The classifiers presented in Section \ref{ssec:thyroid_perf_models} were chosen quite arbitrarily, it would interesting to study variations of those classifiers. Especially, variations could be introduced by changing the assignment of terms to the various output classes. For instance, as \textit{pseudo-inclusions} are very similar to real inclusion it would be worth moving this term to the positive class of the cell classifier. Another variation would be to formulate the classification problems differently. For instance, instead of formulating the pattern classification as a binary problem, the model could predict the terms of the \textit{Pattern} subcategory directly. The effects of those variations on the performances should then be studied.
+ 
