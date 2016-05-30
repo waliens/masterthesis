@@ -27,12 +27,12 @@ This chapter presents the parameters that were tuned by the cross-validation pro
 		\hline
 		Parameters & ET-DIC & ET-DIC (r) & ET-FL & ET-FL (r) \\
 		\hline		
-		\texttt{pyxit\_min\_size} & 0.5 & 0.5 & 0.3 & \\
-		\texttt{pyxit\_max\_size} & 0.8 & 0.8 & 0.8 & \\
-		\texttt{colorspace} & TRGB & TRGB & HSV & \\
+		\texttt{pyxit\_min\_size} & 0.5 & 0.5 & 0.3 & 0.3 \\
+		\texttt{pyxit\_max\_size} & 0.8 & 0.8 & 0.8 & 0.8 \\
+		\texttt{colorspace} & TRGB & TRGB & HSV & HSV \\
 		\texttt{min\_sample\_split} & 1 & 1 & 91 & 232\\
-		\texttt{max\_features} & 1 & 1 & 1 & \\ 
-		\texttt{C} & / & / & 1.0 & \\
+		\texttt{max\_features} & 1 & 1 & 1 & 1\\ 
+		\texttt{C} & / & / & 1.0 & 1.0\\
 		\hline
 	\end{tabular}
 	\caption{Dispatch classifier. Best model's parameters.}
@@ -64,12 +64,12 @@ This chapter presents the parameters that were tuned by the cross-validation pro
 		\hline
 		Parameters & ET-DIC & ET-DIC (r) & ET-FL & ET-FL (r) \\
 		\hline		
-		\texttt{pyxit\_min\_size} & 0.6 & 0.7 & 0.6 & \\
-		\texttt{pyxit\_max\_size} & 0.8 & 0.8 & 0.8 & \\
-		\texttt{colorspace} & HSV & HSV & HSV & \\
-		\texttt{min\_sample\_split} & 1 & 1 & 108 & 232\\
-		\texttt{max\_features} & 1 & 1 & 1 & \\ 
-		\texttt{C} & / & / & 0.1 & \\
+		\texttt{pyxit\_min\_size} & 0.6 & 0.7 & 0.6 & 0.6\\
+		\texttt{pyxit\_max\_size} & 0.8 & 0.8 & 0.8 & 0.8\\
+		\texttt{colorspace} & HSV & HSV & HSV & TRGB\\
+		\texttt{min\_sample\_split} & 1 & 1 & 108 & 156\\
+		\texttt{max\_features} & 1 & 1 & 1 & 1\\ 
+		\texttt{C} & / & / & 0.1 & 1.0\\
 		\hline
 	\end{tabular}
 	\caption{Cell classifier. Best model's parameters.}
