@@ -21,7 +21,7 @@ The workflow developed by Antoine Deblire in \cite{adeblire2013} is summarized i
 
 \begin{figure}
 	\center
-%	\includegraphics[scale=0.95]{image/adeblire_workflow.png}
+	\includegraphics[scale=0.95]{image/adeblire_workflow.png}
 	\caption{Antoine Deblire's workflow (source: \cite{adeblire2013})}
 	\label{fig:workflow_adeblire}
 \end{figure}
@@ -48,24 +48,24 @@ Some example segmentations are provided in Figure \ref{fig:first_seg_example_hig
 \begin{figure}
 	\center
 	\subfigure{
-%		\includegraphics[scale=0.5]{image/slide_segmentation_0_in.png}
-%		\includegraphics[scale=0.5]{image/slide_segmentation_0_out.png}
-%		\includegraphics[scale=0.5]{image/slide_segmentation_0_masked.png}
+		\includegraphics[scale=0.5]{image/slide_segmentation_0_in.png}
+		\includegraphics[scale=0.5]{image/slide_segmentation_0_out.png}
+		\includegraphics[scale=0.5]{image/slide_segmentation_0_masked.png}
 	} \\
 	\subfigure{
-%		\includegraphics[scale=0.5]{image/slide_segmentation_1_in.png}
-%		\includegraphics[scale=0.5]{image/slide_segmentation_1_out.png}
-%		\includegraphics[scale=0.5]{image/slide_segmentation_1_masked.png}
+		\includegraphics[scale=0.5]{image/slide_segmentation_1_in.png}
+		\includegraphics[scale=0.5]{image/slide_segmentation_1_out.png}
+		\includegraphics[scale=0.5]{image/slide_segmentation_1_masked.png}
 	} \\
 	\subfigure{
-%		\includegraphics[scale=0.5]{image/slide_segmentation_2_in.png}
-%		\includegraphics[scale=0.5]{image/slide_segmentation_2_out.png}
-%		\includegraphics[scale=0.5]{image/slide_segmentation_2_masked.png}
+		\includegraphics[scale=0.5]{image/slide_segmentation_2_in.png}
+		\includegraphics[scale=0.5]{image/slide_segmentation_2_out.png}
+		\includegraphics[scale=0.5]{image/slide_segmentation_2_masked.png}
 	} \\
 	\subfigure{
-%		\includegraphics[scale=0.5]{image/slide_segmentation_3_in.png}
-%		\includegraphics[scale=0.5]{image/slide_segmentation_3_out.png}
-%		\includegraphics[scale=0.5]{image/slide_segmentation_3_masked.png}
+		\includegraphics[scale=0.5]{image/slide_segmentation_3_in.png}
+		\includegraphics[scale=0.5]{image/slide_segmentation_3_out.png}
+		\includegraphics[scale=0.5]{image/slide_segmentation_3_masked.png}
 	}
 	\caption{Examples of slide segmentation. For each example, three images are given: the original image to the left, the segmentation mask in the center and to the right, the original image in which the pixels that do not belong to the segmentation mask were replaced by white pixels.}
 	\label{fig:first_seg_examples}
@@ -76,24 +76,24 @@ The second segmentation procedure is applied to the detected patterns and was de
 \begin{figure}
 	\center
 	\subfigure{
-%		\includegraphics[scale=0.33]{image/aggr_segment_12_in.png}
-%		\includegraphics[scale=0.33]{image/aggr_segment_12_out.png}
-%		\includegraphics[scale=0.33]{image/aggr_segment_12_masked.png}
+		\includegraphics[scale=0.33]{image/aggr_segment_12_in.png}
+		\includegraphics[scale=0.33]{image/aggr_segment_12_out.png}
+		\includegraphics[scale=0.33]{image/aggr_segment_12_masked.png}
 	} \\
 	\subfigure{
-%		\includegraphics[scale=0.33]{image/aggr_segment_2_in.png}
-%		\includegraphics[scale=0.33]{image/aggr_segment_2_out.png}
-%		\includegraphics[scale=0.33]{image/aggr_segment_2_masked.png}
+		\includegraphics[scale=0.33]{image/aggr_segment_2_in.png}
+		\includegraphics[scale=0.33]{image/aggr_segment_2_out.png}
+		\includegraphics[scale=0.33]{image/aggr_segment_2_masked.png}
 	} \\
 	\subfigure{
-%		\includegraphics[scale=0.33]{image/aggr_segment_5_in.png}
-%		\includegraphics[scale=0.33]{image/aggr_segment_5_out.png}
-%		\includegraphics[scale=0.33]{image/aggr_segment_5_masked.png}
+		\includegraphics[scale=0.33]{image/aggr_segment_5_in.png}
+		\includegraphics[scale=0.33]{image/aggr_segment_5_out.png}
+		\includegraphics[scale=0.33]{image/aggr_segment_5_masked.png}
 	} \\
 	\subfigure{
-%		\includegraphics[scale=0.33]{image/aggr_segment_7_in.png}
-%		\includegraphics[scale=0.33]{image/aggr_segment_7_out.png}
-%		\includegraphics[scale=0.33]{image/aggr_segment_7_masked.png}
+		\includegraphics[scale=0.33]{image/aggr_segment_7_in.png}
+		\includegraphics[scale=0.33]{image/aggr_segment_7_out.png}
+		\includegraphics[scale=0.33]{image/aggr_segment_7_masked.png}
 	}
 	\caption{Examples of aggregate segmentation.}
 	\label{fig:second_seg_examples}
@@ -103,6 +103,9 @@ While the presented segmentation procedures exhibit some flaws, they were consid
 
 \subsection{Dispatching procedure}
 \label{ssec:thyroid_ad_dispatch}
+
+\subsubsection{Slide processing dispatching}
+
 The step (4.4) consists in dispatching detected objects into four categories: artefacts, cells, clusters and patterns. The categories \textit{artefact} and \textit{cluster} respectively correspond to irrelevant objects and to groups of cells that contains too few of them to be patterns. Even if the author distinguishes patterns and clusters at the dispatching step, objects of both categories are treated equally in the subsequent steps of the algorithm. That is, they are first evaluated by the pattern classifier (for assessing whether they are proliferative or not) and they are re-segmented. The dispatching is based on four parameters, the cell minimum and maximum areas (respectively, $A_{min}$ and $A_{max}$), the cell minimum circularity ($C_{min}$) and the minimum number of cells per pattern ($N_{min}$). The values of those parameters as defined by Antoine Deblire are given in Table \ref{tab:adeb_disp_rules}. The dispatching rules can be summarized as follows:
 
 \begin{itemize}
@@ -194,6 +197,10 @@ The avoid the dispatching problem induced by simple thresholdings, one could inc
 	\caption{Scatter plot, circularity versus area. Green and red dots correspond respectively to cells and patterns. The blue box is the cell dispatching zone.}
 	\label{fig:scatter_area_circ_cell_vs_pattern}
 \end{figure}
+
+\subsubsection{Pattern processing dispatching}
+	
+The dispatching strategy designed in \cite{adeblire2013} for the pattern processing phase is simpler. As the objects to be processed by this step are assumed to be cells, the dispatcher filters the detected objects using their geometrical properties. All objects having an area either less than $A_{min}$ or greater than $A_{max}$ or a circularity less than $C_{min}$ are not dispatched the to cell classifier. As explained in previous sections, those parameters are not reliable for dispatching and a new strategy must therefore be defined. It should take into account the flaws of the second segmentation procedure. Especially, it should eliminate the large patches segmented on "\textit{dirty}" patterns. Typically, those are non-spherical (see Figure \ref{fig:second_seg_examples}) and this property can be used to filter them. Moreover, it might be interesting to filter small artefacts and this can be done by filtering objects having a small area. The resulting dispatching rule is the following: every object of which the area is less than $A'$ or of which the circularity is less than $C'$ are removed. Especially, $A'$ was set to $15 \mu m^2$ and $C'$ to $0.6$. It can be seen in Figures \ref{fig:hist_area_cell_vs_pattern} and \ref{fig:hist_circ_cell_vs_pattern} that those thresholds allow to capture almost all cells. 
 
 \subsection{Classification}
 
@@ -292,7 +299,14 @@ In order to implement the re-segmentation, the chaining package must be used. Fi
 \subsection{Classification models}
 \label{ssec:thyroid_perf_models}
 
-This section presents the various performance analysis performed on the models used for dispatching and for cells and patterns classification. The methodology is presented in Sections \ref{sssec:thyroid_test_set} and \ref{sssec:thyroid_cv} and the results for the various models are presented in Sections \ref{sssec:thyroid_disp_model}, \ref{sssec:thyroid_cell_model} and \ref{sssec:thyroid_pattern_model}.
+As explained in Section \ref{sec:thyroid_adeblire_algo}, three classifiers are used by the workflow. The first detects whether an object is a cell, a pattern or another type of object. The second classifies patterns as proliferative or non-proliferative and the last detects whether cells contain an inclusion or not. The roles of these classifiers are illustrated in Figure \ref{fig:summary_classif}. Information about them including the terms associated with the classes, the performances of the models,... are given in Sections \ref{sssec:general_classif}, \ref{sssec:thyroid_pattern_model}, \ref{sssec:thyroid_cell_model} and \ref{sssec:thyroid_disp_model}. Before exploring the classifiers, the methodology followed for assessing the models is presented in Sections \ref{sssec:thyroid_test_set} and \ref{sssec:thyroid_cv}.
+
+\begin{figure}
+	\center
+	\includegraphics[scale=0.5]{image/summary_classifiers.png}
+	\caption{Classifiers' roles summary}
+	\label{fig:summary_classif}
+\end{figure}
 
 \subsubsection{Test set and metrics}
 \label{sssec:thyroid_test_set}
@@ -390,6 +404,7 @@ In order to maximize the performances of the produced models, a tuning procedure
 Finally, the full assessment procedure consists in splitting the dataset into a learning set and a test set. Then, the best parameters are determined by cross-validation on the learning set, a model is learned on the whole learning set with the best parameters and this model is assessed on the test set using the metrics presented in \ref{sssec:thyroid_test_set}.
 
 \subsubsection{General comments about classifiers}
+\label{sssec:general_classif}
 For each required classifier, both variants of the random subwindows algorithm were evaluated: the first variant where the extra-trees are used as direct classifier (\textit{ET-DIC}), and the second where they are used as features learner to be fed to a SVM classifier (\textit{ET-FL}). Moreover, both variants were evaluated on a first learning set containing only experts' annotations and on a second which was augmented with some reviewed annotations (see Section \ref{sssec:detect_cytomine} for reviewing). Especially, the latter annotations were generated by an execution the workflow on an image from the learning set and  were reviewed on Cytomine in an attempt to improve the classifiers performances. 
 
 As far as the parameters are concerned, a first cross-validation procedure was applied to narrow the search space. Especially, this was applied for finding the ranges in which the window minimum and maximum sizes should be taken. As explained in \cite{Maree201617}, small subwindows yield better results on images containing highly repeatable patterns (e.g. architectural patterns) because they allow to capture fine details. In contrast, larger windows works best on images in which the shape is prevailing (e.g. cells). This intuition was confirmed by a first cross-validation procedure as the best models for classifying cells were built using large windows while small windows yielded better results for classifying patterns.
@@ -400,18 +415,25 @@ The parameter \texttt{max\_features} was tuned whatever the variant and the same
 
 \subsubsection{Pattern classifier}
 \label{sssec:thyroid_pattern_model}
-The pattern classifier is a binary model which predicts whether a pattern is proliferative or not. The correspondence between the output classes and the terms is rather straightforward and is the following:
+The pattern classifier is a binary model which predicts whether a pattern is proliferative or not. The correspondence between the output classes and the terms of the ontology is rather straightforward and is the following:
 
 \begin{itemize}
-	\item Output \textbf{positive} (class 1): terms \textit{proliferative architectural pattern} and \textit{proliferative architectural pattern (minor sign)}
-	\item Output \textbf{negative} (class 0): term \textit{normal follicular architectural pattern}
+	\item Output \textbf{positive} (class 1): 
+	\begin{itemize}
+		\item \textit{proliferative architectural pattern}
+		\item \textit{proliferative architectural pattern (minor sign)}
+	\end{itemize}
+	\item Output \textbf{negative} (class 0): 
+	\begin{itemize}
+		\item \textit{normal follicular architectural pattern}
+	\end{itemize}		
 \end{itemize}
 
-The only terms used are the ones from the subcategory \textit{Pattern} as all the objects to be classified by this model are expected to be patterns.  Indeed, other objects have normally been filtered by the dispatch classifier. Luckily, this distribution of terms yields some rather balanced learning set and test sets (see Table \ref{tab:pattern_classif_dataset_size}). As patterns are usually large objects, only small window sizes were evaluated during cross validation. All the evaluated parameters are given in Appendix \ref{app:parameters} while the one which yielded the better models are given in Table \ref{tab:pattern_classif_best_params}. It seems that the HSV colorspace is particularly well suited to the pattern classification problem. 
+The only terms used are the ones from the subcategory \textit{Pattern} as all the objects to be classified by this model are expected to be patterns.  Indeed, other objects have normally been filtered by the dispatch classifier. Luckily, this distribution of terms yields some rather balanced learning set and test sets (see Table \ref{tab:pattern_classif_dataset_size}). As patterns are usually large objects, only small window sizes were evaluated during cross validation. All the evaluated parameters are given in Appendix \ref{app:cross_val} while the one which yielded the better models are given in Table \ref{tab:pattern_classif_best_params}. It seems that the HSV colorspace is particularly well suited to the pattern classification problem. 
 
 The best models' performances are given in Table \ref{tab:pattern_classif_best_scores} and \ref{tab:pattern_classif_conf_mat}. All models perform relatively well. Especially, almost all models exhibit an impressive recall of 96 \% except for the ET-FL variant with reviewed annotations of which the recall drops to 94 \%.
 
-As the performances are comparable, the model selected to be used for executing the workflow was the ET-DIC variant without reviewed annotations. Especially, the ET-DIC variant was preferred because it executes faster than the ET-FL variant (see in Section \ref{sssec:perf_first_test_serie}) and it also can produce probabilities. 
+As the performances are comparable, the model selected to be used for executing the workflow was the ET-DIC variant without reviewed annotations. Especially, it was preferred because it executes faster than the ET-FL variant (see in Section \ref{sssec:perf_first_test_serie}) and also because the model can generate class probabilities.
 
 \begin{table}
 	\small
@@ -462,89 +484,35 @@ As the performances are comparable, the model selected to be used for executing 
 	\label{tab:pattern_classif_best_scores}
 \end{table}
 
-\begin{table}
-	\small
-	\center 
-	\begin{tabular}{|c|c|c|c|c|}
-		\hline
-		Parameters & ET-DIC & ET-DIC (r) & ET-FL & ET-FL (r) \\
-		\hline		
-		\texttt{pyxit\_min\_size} & 0.3 & 0.2 & 0.2 & 0.2\\
-		\texttt{pyxit\_max\_size} & 0.4 & 0.4 & 0.4 & 0.4 \\
-		\texttt{colorspace} & HSV & HSV & HSV & HSV \\
-		\texttt{min\_sample\_split} & 1 & 1 & 67 & 76 \\
-		\texttt{max\_features} & 1 & 1 & 1 & 1 \\ 
-		\texttt{C} & / & / & 0.1 & 1.0 \\
-		\hline
-	\end{tabular}
-	\caption{Pattern classifier. Best model's parameters.}
-	\label{tab:pattern_classif_best_params}
-\end{table}
-
-\begin{table}
-	\small
-	\center
-	\subfigure [ET-DIC] {
-		\begin{tabular}{|c|rcrc|}
-			\hline 
-			& \multicolumn{2}{c}{Normal} & \multicolumn{2}{c|}{Prolif.} \\
-			\hline
-			Normal & 155 & \tiny (30.45\%) & 58 & \tiny (11.39\%)\\
-			Prolif. & 10 & \tiny (1.96\%) & 286 & \tiny (56.19\%)\\
-			\hline
-		\end{tabular}
-	}
-	\subfigure [ET-DIC (reviewed)] {
-		\begin{tabular}{|c|rcrc|}
-			\hline 
-			& \multicolumn{2}{c}{Normal} & \multicolumn{2}{c|}{Prolif.} \\
-			\hline
-			Normal & 146 & \tiny (28.68\%) & 67 & \tiny (13.16\%)\\
-			Prolif. & 11 & \tiny (2.16\%) & 287 & \tiny (55.99\%)\\
-			\hline
-		\end{tabular}
-	} \\
-	\subfigure [ET-FL] {
-		\begin{tabular}{|c|rcrc|}
-			\hline 
-			& \multicolumn{2}{c}{Normal} & \multicolumn{2}{c|}{Prolif.} \\
-			\hline
-			Normal & 156 & \tiny (30.65\%) & 57 & \tiny (11.20\%)\\
-			Prolif. & 11 & \tiny (2.16\%) & 285 & \tiny (55.99\%)\\
-			\hline
-		\end{tabular}
-	}
-	\subfigure [ET-FL (reviewed)] {
-		\begin{tabular}{|c|rcrc|}
-			\hline 
-			& \multicolumn{2}{c}{Normal} & \multicolumn{2}{c|}{Prolif.} \\
-			\hline
-			Normal & 158 & \tiny (31.04\%) & 55 & \tiny (10.81\%)\\
-			Prolif. & 15 & \tiny (2.95\%) & 281 & \tiny (55.21\%)\\
-			\hline
-		\end{tabular}
-	}
-	\caption{Pattern classifier. Confusion matrices.}
-	\label{tab:pattern_classif_conf_mat}
-\end{table}
-
 \subsubsection{Cell classifier}
 \label{sssec:thyroid_cell_model}
 
-The cell classifier is a binary model which predicts whether a cell contains an inclusion or not. As there are more terms related to cells, the correspondence between terms and classification labels is slightly more complex than for the pattern classifier:
+The cell classifier is a binary model which predicts whether a cell contains an inclusion or not. As there are more terms related to cells, the correspondence between the terms of the ontology and the classification labels is slightly more complex than for the pattern classifier:
 
 \begin{itemize}
-	\item Output \textit{positive} (class 1) : term \textit{cell with inclusion}
-	\item Output \textit{negative} (class 0) : terms \textit{cell with NOS}, \textit{pseudo-inclusion}, \textit{ground glass nuclei}, \textit{nuclear grooves}, \textit{normal cell}, \textit{red blood cell} and \textit{polynuclear}
+	\item Output \textit{positive} (class 1): 
+	\begin{itemize}
+		\item \textit{cell with inclusion}
+	\end{itemize}
+	\item Output \textit{negative} (class 0): 
+	\begin{itemize}
+		\item \textit{cell with NOS}
+		\item \textit{pseudo-inclusion}
+		\item \textit{ground glass nuclei}
+		\item \textit{nuclear grooves}
+		\item \textit{normal cell}
+		\item \textit{red blood cell}
+		\item \textit{polynuclear}
+	\end{itemize}
 \end{itemize}
 
-While for the pattern classifer, only objects from the \textit{Pattern} subcategory were used, the cell classifier is trained with two terms from the \textit{Other} subcategory. This was done because those two terms (i.e. red blood cell and polynuclear) corresponds to objects that can be mistaken with actual cells. Especially, if those objects are dispatched to the cell classifier, it has to be able to associate to them the negative class. Choosing this mapping has nevertheless the drawback of emphasizing the class imbalance. Table \ref{tab:cell_classif_dataset_size} shows that only 25 \% of the objects input set are cells with inclusion. For this classifier, the windows sizes were chosen relatively big (see Table \ref{tab:app_cell_classif_tuned}) as the cells are small objects. 
+While for the pattern classifer, only objects from the \textit{Pattern} subcategory were used, the cell classifier is trained with two terms from the \textit{Other} subcategory. This was done because those two terms (i.e. red blood cell and polynuclear) corresponds to objects that can be mistaken with actual cells. Especially, if those objects are dispatched to the cell classifier, it has to be able to associate to them the negative class. Choosing this mapping has nevertheless the drawback of emphasizing the class imbalance. Table \ref{tab:cell_classif_dataset_size} shows that only 25 \% of the objects input set are cells with inclusion. For this classifier, the windows sizes were chosen relatively big (see Table \ref{tab:app_cell_classif_tuned}) as the cells are small objects with few details and no repeatable patterns. 
 
-The performance expectations for this classifier are the following: the consequences of the presence of cells with inclusion is such that those should not be missed. Especially, recall should be as high as possible. Moreover, as the cells found by the workflow would in practice be reviewed by physicians (before making a diagnosis), the number of false positive should also kept as small as possible. This would be expressed by a high precision. The best models' performances are given in Table \ref{tab:cell_classif_best_scores}. Those results shows that while providing a good precision, the models fails at detecting cells with inclusion. The performances are particularly bad and worse than random guessing when the model is built using the ET-DIC variant as only 13 \% of the cells with inclusion are correctly labelled as such. The results are better with the ET-FL variant as the recall rises to 50 \% on the dataset containing the reviewed annotations. While the increase is spectacular, the model still performs very poorly as random guessing would yield the same performances, at least in term of recall. 
+The performance expectations for this classifier are the following: the consequences of the presence of cells with inclusion is such that those should not be missed. Especially, recall should be as high as possible. Moreover, as the cells found by the workflow would in practice be reviewed by physicians (before making a diagnosis), the number of false positive should also kept as small as possible. This would be expressed by a high precision. The best models' performances are given in Table \ref{tab:cell_classif_best_scores} and \ref{tab:cell_classif_conf_mat}. Those results show that the models do not meet the expectations. Indeed, whereas they exhibit a relatively good precision, the recall is far from being acceptable which indicates that the models fail at detecting cells with inclusion. The performances are particularly bad and worse than random guessing when the model is built using the ET-DIC variant as only 13 \% of the cells with inclusion are correctly labelled as such. The results are better with the ET-FL variant as the recall rises to 50 \% on the dataset containing the reviewed annotations. While the increase is spectacular, the model still performs very poorly as random guessing would yield approximately the same recall. 
 
-Those poor performances can be explained by two factors. The first is the similarity between the cells containing an inclusion and some cells of the negative class. For instance, the cells with pseudo inclusion are very similar to cells with inclusion as shown in Figure \ref{fig:similarity_incl_pseudo}. The second is the class imbalance in the dataset. It appears that adding the reviewed annotations in the learning has improved the recall with the ET-FL variant. Increasing the amount of data by performing more reviewing might be a solution to improve the classifier.
+Those poor performances might be explained by two elements. The first is the similarity between the cells containing an inclusion and some cells of the negative class. For instance, the cells with pseudo inclusion are very similar to cells with inclusion as shown in Figure \ref{fig:similarity_incl_pseudo}. The second is the class imbalance in the dataset. It appears that adding the reviewed annotations in the learning has improved the recall with the ET-FL variant. Therefore, increasing the amount of data by performing more reviewing might be a solution to improve the classifier. 
 
-Because it exhibits the best recall score, the model ET-FL with reviewed annotations was chosen to be used within the workflow.
+Because it exhibits the best recall score, the model ET-FL with reviewed annotations should be used within the workflow.
 
 \begin{figure}
 	\center
@@ -612,93 +580,46 @@ Because it exhibits the best recall score, the model ET-FL with reviewed annotat
 	\label{tab:cell_classif_best_scores}
 \end{table}
 
-\begin{table}
-	\small
-	\center 
-	\begin{tabular}{|c|c|c|c|c|}
-		\hline
-		Parameters & ET-DIC & ET-DIC (r) & ET-FL & ET-FL (r) \\
-		\hline		
-		\texttt{pyxit\_min\_size} & 0.6 & 0.7 & 0.6 & \\
-		\texttt{pyxit\_max\_size} & 0.8 & 0.8 & 0.8 & \\
-		\texttt{colorspace} & HSV & HSV & HSV & \\
-		\texttt{min\_sample\_split} & 1 & 1 & 108 & 232\\
-		\texttt{max\_features} & 1 & 1 & 1 & \\ 
-		\texttt{C} & / & / & 0.1 & \\
-		\hline
-	\end{tabular}
-	\caption{Cell classifier. Best model's parameters.}
-	\label{tab:cell_classif_best_params}
-\end{table}
-
-\begin{table}
-	\small
-	\center
-	\subfigure [ET-DIC] {
-		\begin{tabular}{|c|rcrc|}
-			\hline 
-			& \multicolumn{2}{c}{Normal} & \multicolumn{2}{c|}{Prolif.} \\
-			\hline
-			Normal & 937 & \tiny (80.92\%) & 6 & \tiny (0.52\%)\\
-			Prolif. & 187 & \tiny (16.15\%) & 28 & \tiny (2.42\%)\\
-			\hline
-		\end{tabular}
-	}
-	\subfigure [ET-DIC (reviewed)] {
-		\begin{tabular}{|c|rcrc|}
-			\hline 
-			& \multicolumn{2}{c}{Normal} & \multicolumn{2}{c|}{Prolif.} \\
-			\hline
-			Normal & 938 & \tiny (81.00\%) & 5 & \tiny (0.43\%)\\
-			Prolif. & 186 & \tiny (16.06\%) & 29 & \tiny (2.50\%)\\
-			\hline
-		\end{tabular}
-	} \\
-	\subfigure [ET-FL] {
-		\begin{tabular}{|c|rcrc|}
-			\hline 
-			& \multicolumn{2}{c}{Normal} & \multicolumn{2}{c|}{Prolif.} \\
-			\hline
-			Normal & 910 & \tiny (78.58\%) & 33 & \tiny (2.85\%)\\
-			Prolif. & 118 & \tiny (10.19\%) & 97 & \tiny (8.38\%)\\
-			\hline
-		\end{tabular}
-	}
-	\subfigure [ET-FL (reviewed)] {
-		\begin{tabular}{|c|rcrc|}
-			\hline 
-			& \multicolumn{2}{c}{Normal} & \multicolumn{2}{c|}{Prolif.} \\
-			\hline
-			Normal & 881 & \tiny (76.08\%) & 62 & \tiny (5.35\%)\\
-			Prolif. & 109 & \tiny (9.41\%) & 106 & \tiny (9.15\%)\\
-			\hline
-		\end{tabular}
-	}
-	\caption{Cell classifier. Confusion matrices.}
-	\label{tab:cell_classif_conf_mat}
-\end{table}
-
 \subsubsection{Dispatching classifier}
 \label{sssec:thyroid_disp_model}
-The dispatching classifier is a ternary model which predicts from the image of an object its type among three: \textit{cell}, \textit{pattern} or \textit{other}. The correspondence between the classes and the terms is the following:
+The dispatching classifier is a ternary model which predicts whether an object is a cell, a pattern or another type of object. The correspondence between the classes and the terms of the ontology is the following:
 
 \begin{itemize}
-	\item Output \textit{pattern} (class 0): terms \textit{proliferative architectural pattern}, \textit{proliferative architectural pattern (minor sign)} and \textit{normal follicular architectural pattern}
-	\item Output \textit{cell} (class 1): terms \textit{cell with NOS}, \textit{pseudo-inclusion}, \textit{ground glass nuclei}, \textit{nuclear grooves}, \textit{normal cell}, \textit{red blood cell} and \textit{cell with inclusion}
-	\item Output \textit{other} (class 2): terms \textit{background}, \textit{artefact}, \textit{macrophage}, \textit{polynuclear} and \textit{colloid}
+	\item Output \textit{pattern} (class 0): 
+	\begin{itemize}
+		\item \textit{proliferative architectural pattern}
+		\item \textit{proliferative architectural pattern (minor sign)} 
+		\item \textit{normal follicular architectural pattern}
+	\end{itemize}
+	\item Output \textit{cell} (class 1): 
+	\begin{itemize}
+		\item \textit{cell with NOS}
+		\item \textit{pseudo-inclusion}
+		\item \textit{ground glass nuclei}
+		\item \textit{nuclear grooves}
+		\item \textit{normal cell}
+		\item \textit{red blood cell} 
+		\item \textit{cell with inclusion}
+	\end{itemize} 
+	\item Output \textit{other} (class 2): 
+	\begin{itemize}
+		\item \textit{background}
+		\item \textit{artefact}
+		\item \textit{macrophage}
+		\item \textit{polynuclear}
+		\item \textit{colloid}
+	\end{itemize} 
 \end{itemize}
 
-Most terms' associated outputs are expected. However, it is worth noting that, on the one hand, the polynuclear term was placed in the \textit{Other} output and that, on the other hand, the \textit{red blood cell} term was left in cell. As far as \textit{polynuclear} is concerned, it is not a cell and therefore shouldn't be dispatched to the cell classifier. While \textit{red blood cells} are cells, they are not of the same kind as the ones that are processed by the cell classifier. However, they were left in the \textit{cell} output because they look like cells with inclusion.
+Mostly, the correspondence is expected. The only peculiarity is the association of the term \textit{Red blood cell} with the second output. Whereas this term is in the \textit{Other} subcategory, red blood cells look quite much like cells with inclusion. So it seemed a good idea to bias the model so that it redirects those to the cell classifier in order not to miss cells with inclusion. 
 
-As shown in Table \ref{tab:dispatch_classif_dataset_size}, the term repartition induces an imbalance. The class \textit{Other} is particularly under-represented. However, the imbalance is not as critical as for the cell classifier. 
-As far as the parameters are concerned, the windows sizes couldn't be chosen from a particular range as the classifier handles both small and big objects.
+As shown in Table \ref{tab:dispatch_classif_dataset_size}, the terms distribution induces an imbalance. The third class is particularly under-represented. However, the imbalance is not as critical as for the cell classifier. As far as the windows dimensions are concerned, the first cross-validation revealed that using both small and large ones at the same time yielded better results (see Table \ref{tab:dispatch_classif_best_params} for the dimensions).
 
-The best models' performances are given in Table \ref{tab:dispatch_classif_best_scores}. A first observation is that all the models seem to be relatively good at dispatching cells and patterns. However, they fail at dispatching other objects. This is particularly true for the ET-DIC variant without reviewed annotations which classifies all the other objects as cells or patterns. The addition of reviewed annotations brings a slight improvement as 4 \% of the other objects are classified as such.
+The best models' performances are given in Table \ref{tab:dispatch_classif_best_scores} and \ref{tab:dispatch_classif_conf_mat}. A first observation is that all models seem to be relatively good at dispatching cells and patterns. However, they fail at dispatching other objects. This is particularly true for the ET-DIC variant without reviewed annotations which classifies all the other objects as cells or patterns. The addition of reviewed annotations brings a slight improvement as 4 \% of the other objects are classified as such.
 
-The ET-FL variant brings a non-negligible improvement as for the classification of other objects as 46 \% of those are correctly classified. This model also classifies the patterns more precisely as only 4 \% are misclassified against 11 \% with the ET-DIC variant. 
+The ET-FL variant brings a non-negligible improvement as for the classification of other objects as 46 \% of them are correctly classified. This model also classifies the patterns more precisely as only 4 \% are misclassified against 11 \% with the ET-DIC variant. Those improvements come at the the cost of a slight degradation of cell classification as 5 \% of them are classified as other objects. The addition of the reviewed annotations (which contain a majority of other objects, see Table \ref{tab:dispatch_classif_dataset_size}) increases the proportion of correctly classified other objects which reaches almost 60 \%. Again, this comes at the cost increasing the misclassification rate for the other classes which reaches approximately 8 \% for both of them.
 
-\textbf{TODO ET-FL (reviewed)}
-At the price of a slight degradation of the ...
+As it exhibits the best accuracy, the ET-FL variant without reviewed annotations should be used within the workflow to dispatch cells.
 
 \begin{table}
 	\small
@@ -746,83 +667,13 @@ At the price of a slight degradation of the ...
 	\label{tab:dispatch_classif_best_scores}
 \end{table}
 
-\begin{table}
-	\small
-	\center
-	\subfigure [ET-DIC] {
-		\begin{tabular}{|c|rcrcrc|}
-			\hline 
-			& \multicolumn{2}{c}{Pattern} & \multicolumn{2}{c}{Cell} & \multicolumn{2}{c|}{Other} \\
-			\hline
-			Pattern & 453 & \tiny (24.82\%) & 57 & \tiny (3.12\%) & 0 & \tiny (0.0\%)\\
-			Cell & 11 & \tiny (0.60\%) & 1098 & \tiny (60.16\%) & 0 & \tiny (0.0\%)\\
-			Other & 34 & \tiny (1.86\%) & 172 & \tiny (9.42\%) & 0 & \tiny (0.0\%) \\
-			\hline
-		\end{tabular}
-	}
-	\subfigure [ET-DIC (reviewed)] {
-		\begin{tabular}{|c|rcrcrc|}
-			\hline 
-			& \multicolumn{2}{c}{Pattern} & \multicolumn{2}{c}{Cell} & \multicolumn{2}{c|}{Other} \\
-			\hline
-			Pattern & 460 & \tiny (25.21\%) & 41 & \tiny (2.25\%) & 5 & \tiny (0.49\%)\\
-			Cell & 22 & \tiny (1.21\%) & 1084 & \tiny (59.40\%) & 3 & \tiny (0.16\%)\\
-			Other & 36 & \tiny (1.97\%) & 162 & \tiny (8.88\%) & 8 & \tiny (0.44\%) \\
-			\hline
-		\end{tabular}
-	} \\
-	\subfigure [ET-FL] {
-		\begin{tabular}{|c|rcrcrc|}
-			\hline 
-			& \multicolumn{2}{c}{Pattern} & \multicolumn{2}{c}{Cell} & \multicolumn{2}{c|}{Other} \\
-			\hline
-			Pattern & 492 & \tiny (26.96\%) & 12 & \tiny (0.66\%) & 6 & \tiny (0.33\%)\\
-			Cell & 12 & \tiny (0.66\%) & 1045 & \tiny (57.26\%) & 52 & \tiny (2.85\%)\\
-			Other & 30 & \tiny (1.64\%) & 87 & \tiny (4.77\%) & 89 & \tiny (4.88\%) \\
-			\hline
-		\end{tabular}
-	}
-	\subfigure [ET-FL (reviewed)] {
-		\begin{tabular}{|c|rcrcrc|}
-			\hline 
-			& \multicolumn{2}{c}{Pattern} & \multicolumn{2}{c}{Cell} & \multicolumn{2}{c|}{Other} \\
-			\hline
-			Pattern & 937 & \tiny (80.92\%) & 6 & \tiny (0.52\%) & 6 & \tiny (0.52\%)\\
-			Cell & 187 & \tiny (16.15\%) & 28 & \tiny (2.42\%) & 28 & \tiny (2.42\%)\\
-			Other & 187 & \tiny (16.15\%) & 28 & \tiny (2.42\%) & 28 & \tiny (2.42\%) \\
-			\hline
-		\end{tabular}
-	}
-	\caption{Dispatch classifier. Confusion matrices.}
-	\label{tab:dispatch_classif_conf_mat}
-\end{table}
-
-\begin{table}
-	\small
-	\center 
-	\begin{tabular}{|c|c|c|c|c|}
-		\hline
-		Parameters & ET-DIC & ET-DIC (r) & ET-FL & ET-FL (r) \\
-		\hline		
-		\texttt{pyxit\_min\_size} & 0.5 & 0.5 & 0.3 & \\
-		\texttt{pyxit\_max\_size} & 0.8 & 0.8 & 0.8 & \\
-		\texttt{colorspace} & TRGB & TRGB & HSV & \\
-		\texttt{min\_sample\_split} & 1 & 1 & 91 & 232\\
-		\texttt{max\_features} & 1 & 1 & 1 & \\ 
-		\texttt{C} & / & / & 1.0 & \\
-		\hline
-	\end{tabular}
-	\caption{Dispatch classifier. Best model's parameters.}
-	\label{tab:dispatch_classif_best_params}
-\end{table}
-
 \subsection{Execution times}
 
-In order to assess the time performances of the workflow, several tests were performed. The tables containing the execution times can be found in Appendix \ref{app:exec_times}. Each run\footnote{A "run" is an execution of the workflow.} was assigned a number which can be found on the of the tables. Three series of tests were performed:
+In order to assess the time performances of the workflow, several tests were performed. The tables containing the execution times can be found in Appendix \ref{app:exec_times}. Each run\footnote{A "run" is an execution of the workflow.} was assigned a number which can be found in the tables. Three series of tests were performed:
 
 \begin{enumerate}
 	\item The first consisted in launching the first part of the workflow (first segmentation) several times over the same image by varying the tile dimensions and the number of available processes. Those tests provide a first illustration of the performances of the workflow as well as information about the efficiency of the parallalelization. The results are presented in Section \ref{sssec:perf_first_test_serie}.
-	\item The second consisted in launching the workflow on the images from the test set. This allows to assess how the workflow behaves on tiles where the number of objects is small. The results are presented in Section \ref{sssec:perf_second_test}.
+	\item The second consisted in launching the workflow on images from the test set. This allows to assess how the workflow performs on typical images containing possibly a lot of objects. The results are presented in Section \ref{sssec:perf_second_test}.
 	\item The last test was performed in order to assess the pattern segmentation. The results are presented in Section \ref{sssec:perf_third_test}.
 \end{enumerate} 
 
@@ -835,7 +686,7 @@ The resulting execution times computed for this test series are given in Table \
 	\item \textbf{Run 4}: it was launched after run 1 and therefore benefited from the cached crops files. Still, it had to download all tiles of dimensions $1024\times 1024$.
 \end{itemize}
 
-In Figure \ref{fig:exec_time_work_phase_r1_2} are shown execution times of the various phases of the workflow on runs 1 and 2. For each run, two charts are given: all the phases are displayed on the first and \textit{Caching} and \textit{Upload} have been removed from the second. Those Figures provide a good illustration of the workflow performances. First, it can be seen that the time required for fetching and caching the tiles dominates all the others except \textit{Upload} (see Figure \ref{sfig:perf_typical_nocaching}). For run 1, more than one hour and a half was needed to download 29900 tiles while other steps combined (except \textit{Upload}) lasted approximately 27 minutes. For run 4, approximately one hour was needed to fetch 7353 tiles while all other steps combined lasted the same time as for run 1 (see Table \ref{tab:perf_time_size_and_jobs}). 
+In Figure \ref{fig:exec_time_work_phase_r1_2} are shown execution times of the various phases of the workflow on runs 1 and 2. For each run, two charts are given: all the phases are displayed on the first and \textit{Caching} and \textit{Upload} have been removed from the second. Those figures provide a good illustration of the workflow performances. First, it can be seen that the time required for fetching and caching the tiles dominates all the others except \textit{Upload} (see Figure \ref{sfig:perf_typical_nocaching}). For run 1, more than one hour and a half was needed to download 29900 tiles while other steps combined (except \textit{Upload}) lasted approximately 27 minutes. For run 4, approximately one hour was needed to fetch 7353 tiles while all other steps combined lasted the same time as for run 1 (see Table \ref{tab:perf_time_size_and_jobs}). 
 
 As far as the \textit{Upload} phase is concerned, its execution time for runs 1 and 4 is more than ten times greater than for the other runs. Those abnormal execution times can be explained by the fact that the Cytomine server was probably busy at the time those runs were executed (indeed run 1 and 4 were executed one after another) and the server was therefore slower at responding to incoming requests. As for the other runs, the execution time is quite stable and is approximately 6 minutes (for uploading 6600 annotations). This can be seen in Figure \ref{sfig:perf_typical_caching} where the execution time of \textit{Upload} is comparable to that of the other steps.  
 
@@ -855,7 +706,7 @@ With regard to the other phases, it can be seen in Figures \ref{sfig:perf_typica
 
 The second longest phase after \textit{Cell disp.} is the tile processing, \textit{LSL}. It lasts approximately 26 \% of the overall execution time for runs 1 and 2. As explained in Section \ref{sssec:work_parallel}, this phase is parallelized by the \textit{SLDC} framework. The gain provided by this parallelization is shown in Figure \ref{sfig:perf_lsl_paral_overall} where the overall execution time of \textit{LSL} is compared for all the runs presented in Table \ref{tab:perf_time_size_and_jobs}. Especially, one can see that increasing the number of process to  32 (starting from 16) makes \textit{LSL} $1.4$ faster with tiles of dimensions $512\times 512$ and $1.5$ times faster with tiles of dimensions $1024\times 1024$. Moreover, quadrupling the number of process increases the speed by a factor $2.4$ and $2.6$ for tiles of dimensions $512 \times 512$ and $1024 \times 1024$ respectively. This increase is non-negligible and proves that parallelizing this step was worth it. However, as explained in Section \ref{sec:work_improvements}, the parallelization can still be improved. 
 
-In Figure \ref{sfig:perf_lsl_paral_proc} is presented the execution times of the sub-phases of \textit{LSL} averaged over all the processed tiles. The chart provides a surprising result. Indeed, it seems that the execution times of the sub-phases increase with the number of available processes. This phenomenon might be understandable for \textit{Loading} which manipulates files. Indeed, if several processes try to open different files at the same time, the operating system might struggle to answer all those file opening requests at once. However, this cannot explain why \textit{Segment} and \textit{Location}, which are purely CPU-bound, experience the same phenomenon. \textbf{TODO explain this !!}
+In Figure \ref{sfig:perf_lsl_paral_proc} is presented the execution times of the sub-phases of \textit{LSL} averaged over all the processed tiles. The chart provides a surprising result. Indeed, it seems that the execution times of the sub-phases increase with the number of available processes. This phenomenon might be understandable for \textit{Loading} which manipulates files. Indeed, if several processes try to open different files at the same time, the operating system might struggle to answer all those file opening requests at once. However, this cannot explain why \textit{Segment} and \textit{Location}, which are purely CPU-bound, experience the same phenomenon.
 
 The impact of the tile dimensions on the execution times of the sub-phases of \textit{LSL} is shown in Figure \ref{fig:perf_tile_dim_lsl}. The expectation is that all sub-phases are four times faster on the tile of dimensions $512\times 512$ as those are four times smaller. The results are slightly above the expectations for \textit{Segment} and \textit{Location} which are respectively $4.3$ and $4.2$ faster on the smaller tiles. As for \textit{Loading}, it is surprisingly $6.4$ times faster. However, no conclusion can be taken from this result as the speed up factor for \textit{Loading} seems unstable. Indeed, it is $3.7$ and $2.5$ for $16$ and $32$ processes respectively. 
 
