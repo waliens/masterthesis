@@ -745,7 +745,7 @@ The execution time of the \textit{Dispatch} phase depends on the number of objec
 
 For all runs, most of the execution was spent doing network requests. Especially, the tile caching time extremely high. The download rates for runs 7 and 8 are respectively Mb/s and 582.92 kb/s. Given that the downloading was parallelized, those rates indicates a problem either on the network, or in the in the implementation of the download\footnote{The download is implemented using a Python library provided by Cytomine}.
 
-Networking time put aside, the overall execution of the workflow lasted approximately 18 minutes over the larger images (runs 7 and 8) and 7 minutes for the smallest one (run 9).
+Networking time put aside, the overall execution of the workflow lasted approximately 18 minutes over the larger images (runs 7 and 8) and 7 minutes for the smallest one (run 9). 
 
 \begin{figure}
 	\center
@@ -772,14 +772,121 @@ Otherwise, it can be seen that the choice of a dispatching policy which relies e
 
 \subsection{Detection}
 
-This section aims at assessing the detection performances of the developed workflow. Before starting the analysis, it is obvious that the detection power will not be particularly impressive because the various components composing the workflow (segmentations procedures, classifiers,...) still presents some flaws. However, the primary goal was not to produce a production-ready solution to the thyroid case but more to assess the performances of the framework. The main point of this section is therefore to provide a baseline for future works on this case. In Sections \ref{ssec:detect_slide_processing} and \ref{ssec:detect_pattern_processing} are presented respectively the results for the slide processing and pattern processing workflows.
+This section aims at assessing the detection performances of the developed workflow. Before starting the analysis, it is obvious that the detection power will not be particularly impressive because the various components composing the workflow (segmentations procedures, classifiers,...) still presents some flaws. However, the primary goal was not to produce a production-ready solution to the thyroid case but more to assess the performances of the framework. The main point of this section is therefore to provide a baseline for future works on this case. 
+
+As the amount of generated annotations is high, an exhaustive assessment is impossible. Moreover, an accurate feedback could only be provided by cytopathologists. Therefore the assessment is broken down in two parts. The first consist in using the experts' annotations already present on the analysed slides and to check whether the workflow was able to find those objects and to classify them correctly. The results are presented in Section \ref{fig:existing_annotations}. The second consists in assessing visually the performances. In Sections \ref{ssec:detect_slide_processing} and \ref{ssec:detect_pattern_processing} are presented respectively the results for slide processing and pattern processing workflows. 
+
+\subsubsection{Existing annotations}
+\label{fig:existing_annotations}
+The checking was performed manually on the two images which were applied the full workflow (i.e. 728725 and 716258). The first contained exclusively proliferative patterns annotations (and one with minor signs) and all of them (28) were found and classified as proliferative. The second contained exclusively nuclear features embedded inside patterns:
+
+\begin{itemize}
+	\item \textit{11 nuclear grooves}: 1 was found and classified as normal, 7 were found and classified as normal but were significantly under-segmented and 3 were missed
+	\item \textit{15 cells with NOS}: 2 were found and classified as normal, 9 were found and classified as normal but were significantly under-segmented and 4 were missed
+	\item \textit{1 cell with inclusion}: missed
+	\item \textit{1 ground glass}: missed
+\end{itemize}
+
+While the number of checked annotations is not significant, the results obtained here provide already an idea about the performance of the workflow. It seems that the workflow is able to detect, dispatch and classify architectural patterns correctly. Also, it seems to fail at segmenting embedded cells in general as the resulting annotations are typically under-segmented. 
 
 \subsubsection{Slide processing workflow}
 \label{ssec:detect_slide_processing}
+As said in Section \ref{fig:existing_annotations}, the workflow seems to succeed at detecting architectural pattern. In Figure \ref{fig:detect_success_pattern} are given four examples of zones where patterns were successfully segmented, dispatched and classified by the workflow. However, a first problem can be seen in the first example where a zone is not included in the annotation for the upper right pattern. Segmentation seems to have difficulty when a darker are is contained in a pattern. This might be due to a too high staining concentration or simply by overlapping cells. In this specific case, it might not be a problem as some other parts of the same pattern were detected but it could happend that the full pattern is darker in which case it would be missed. 
 
+\begin{figure}
+	\center
+	\subfigure{
+		\includegraphics[scale=0.46]{image/success_pattern_1_nopat.png}
+		\includegraphics[scale=0.46]{image/success_pattern_1_pat.png}
+	}
+	\subfigure{
+		\includegraphics[scale=0.35]{image/success_pattern_2_nopat.png}
+		\includegraphics[scale=0.35]{image/success_pattern_2_pat.png}
+	}
+	\subfigure{
+		\includegraphics[scale=0.40]{image/success_pattern_3_nopat.png}
+		\includegraphics[scale=0.40]{image/success_pattern_3_pat.png}
+	}
+	\subfigure{
+		\includegraphics[scale=0.31]{image/success_pattern_4_nopat.png}
+		\includegraphics[scale=0.31]{image/success_pattern_4_pat.png}
+	}
+	\caption{Successful pattern detection. For each example, to the left is given the initial image and to the right, the image on which was added annotations generated by the workflow. Burgundy and green respectively stands for proliferative and non-proliferative patterns.}
+	\label{fig:detect_success_pattern}
+\end{figure}
+
+While the patterns presented in Figure \ref{fig:detect_success_pattern} were all successfully dispatched to the pattern classifier, it might also happen that a pattern is dispatched to a cell classifier. Some examples are given in Figure \ref{fig:dispatch_error_patt_as_cell}. Typically, those patterns have similarities with cells because they are relatively circular and their colour is generally dark and uniform. This colouration is generally due to a high concentration of overlapping cells.
+
+\begin{figure}
+	\center
+	\subfigure{
+		\includegraphics[scale=0.3]{image/fail_dispatch_patt_as_cell_1.png}	
+		\includegraphics[scale=0.35]{image/fail_dispatch_patt_as_cell_2.png}	
+		\includegraphics[scale=0.4]{image/fail_dispatch_patt_as_cell_3.png}	
+	}
+	\caption{Patterns dispatched erroneously to the cell classifier.}
+	\label{fig:dispatch_error_patt_as_cell}
+\end{figure}
+
+Patterns are generally classified as proliferative (i.e. 97 \% for both runs 10 and 11) which can be seen in Figure \ref{fig:detect_success_pattern} where only two patterns are classified as non-proliferative. Some examples of such patterns are given in Figure \ref{fig:pattern_ex_non_prolif}. One can see that those are typically either very clean patterns or small clusters of cells.
+
+\begin{figure}
+	\center
+	\subfigure{
+		\includegraphics[scale=0.31]{image/success_norm_pattern_1_pat.png}
+		\includegraphics[scale=0.33]{image/success_norm_pattern_4_pat.png}
+		\includegraphics[scale=0.3]{image/success_norm_pattern_5_pat.png}
+	}
+	
+	\subfigure{ 
+		\includegraphics[scale=0.45]{image/success_norm_pattern_2_pat.png}
+		\includegraphics[scale=0.45]{image/success_norm_pattern_3_pat.png}
+	}
+	\caption{Some of the few objects dispatched as non-proliferative patterns and classified as non-proliferative.}
+	\label{fig:pattern_ex_non_prolif}
+\end{figure}
 
 \subsubsection{Pattern processing workflow}
 \label{ssec:detect_pattern_processing}
+In Section \ref{ssec:segmentation_proc}, few examples of successful and failing pattern segmentations were given. Especially, it seemed that the segmentation procedure was able to extract cells from clean patterns rather efficiently but that it failed on patterns containing a lot of overlapping cells or with high staining concentration. Example of successful segmentations are given in Figure \ref{fig:pattern_success_full_reseg}. On those figures, very few cells are under-segmented or missed and very few overlapping cells are detected as a single one. In terms of classification, the performances are also quite good in this case as almost all cells are classified as normal cells. There is only one false positive in Figure \ref{sfig:false_positive_incl} as a cell with inclusion is detected. 
+
+\begin{figure}
+	\center
+	\subfigure [Example 1 - The detected pattern.]{
+		\includegraphics[scale=0.6]{image/success_reseg_1_pat.png}
+	}
+	\subfigure [Example 1 - The detected cells.]{
+		\includegraphics[scale=0.6]{image/success_reseg_1_nopat.png}
+		\label{sfig:false_positive_incl}
+	}
+	\subfigure [To the left the detected pattern and to the right the detected cells.] {
+		\includegraphics[scale=0.5]{image/success_reseg_2_pat.png}
+		\includegraphics[scale=0.5]{image/success_reseg_2_nopat.png}
+	}
+	\caption{Examples of successful pattern segmentation. Normal cells are coloured in green and cells with inclusions in orange.}
+	\label{fig:pattern_success_full_reseg}
+\end{figure}
+
+Some examples of failing segmentation and/or dispatching are given in Figure \ref{fig:failing_detection} 
+
+\begin{figure}
+	\center
+	\subfigure [Overlapping] {
+		\includegraphics[scale=0.3]{image/failure_reseg_overlap_1_pat.png}	
+		\includegraphics[scale=0.3]{image/failure_reseg_overlap_1_nopat.png}	
+	}
+	\subfigure [Overlapping] {
+		\includegraphics[scale=0.5]{image/failure_reseg_overlap_2_pat.png}	
+		\includegraphics[scale=0.5]{image/failure_reseg_overlap_2_nopat.png}	
+	}
+	\subfigure [Other image] {
+		\includegraphics[scale=0.5]{image/failure_reseg_noreason_1_pat.png}	
+		\includegraphics[scale=0.5]{image/failure_reseg_noreason_2_nopat.png}
+	}
+	\caption{}
+	\label{fig:failing_detection}
+\end{figure}
+
 \subsection{Classification}
 
 \section{Improvements and future works}
