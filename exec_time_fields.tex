@@ -1,5 +1,5 @@
 \label{app:exec_times}
-In Tables \ref{tab:perf_time_size_and_jobs}, ..., are given detailed execution times for executions of the workflow on several images. All execution times are given in seconds. More details about the fields of those tables are given hereafter:
+In Tables \ref{tab:perf_time_size_and_jobs}, ..., are given detailed execution times for executions of the workflow on several images. All execution times are given in seconds. More details about the fields of Tables \ref{tab:perf_time_size_and_jobs} and \ref{tab:perf_time_typical} are given hereafter:
 
 \begin{enumerate}
 	\item \textbf{Run information}: global information about the run
@@ -50,8 +50,8 @@ In Tables \ref{tab:perf_time_size_and_jobs}, ..., are given detailed execution t
 	\end{itemize}
 	\item \textbf{Total}: 
 	\begin{itemize}
-		\item \textit{Not net. 1}: total execution time of the run from which was deduced the \textit{Caching} and \textit{Upload} execution times. 
-		\item \textit{Not net. 2}: total execution time of the run from which was deduced the \textit{Caching}, \textit{Upload}, \textit{Fetch 1}, \textit{Fetch 2}, \textit{Fetch 3} and \textit{Fetch 4} execution times
+		\item \textit{Not net. 1}: total execution time of the run from which was deduced the \textit{Caching}, \textit{Upload}, \textit{Fetch 1}, \textit{Fetch 2}, \textit{Fetch 3} and \textit{Fetch 4} execution times
+		\item \textit{Not net. 2}: total execution time of the run from which was deduced the \textit{Caching} and \textit{Upload} execution times. 
 		\item \textit{Overall}: total execution time of the run. Might not equal the sum of the various steps executions times. Indeed, some operations performed between those steps are not included in the corresponding execution times
 	\end{itemize}		
 	
@@ -70,7 +70,7 @@ In Tables \ref{tab:perf_time_size_and_jobs}, ..., are given detailed execution t
 		& Tile height & 512 & 512 & 512 & 1024 & 1024 & 1024 \\
 		& Tiles & 29900 & 29900 & 29900 & 7353 & 7353 & 7353 \\
 		& Jobs & 16 & 32 & 64 & 16 & 32 & 64 \\
-		& RAM (Go) & 100 & 100 & 100 & 100 & 100 & 100 \\
+		& RAM (Go) & 22,37 & 50,77 & 72,48 & 21,56 & 41,74 & 73,60 \\
 		&  &  &  &  &  &  & \\
 		\parbox[t]{2mm}{\multirow{5}{*}{\rotatebox[origin=c]{90}{Polygons}}} & Found & 10009 & 10009 & 10009 & 8418 & 8418 & 8418 \\
 		& Merged & 7294 & 7294 & 7294 & 7195 & 7195 & 7195 \\
@@ -103,8 +103,8 @@ In Tables \ref{tab:perf_time_size_and_jobs}, ..., are given detailed execution t
 		\parbox[t]{2mm}{\multirow{2}{*}{\rotatebox[origin=c]{90}{Net.}}} & Caching & 6193.270 & 27.953 & 4.178 & 3858.679 & 10.786 & 4.255 \\
 		& Upload & 4993.832 & 444.564 & 444.000 & 4039.734 & 471.113 & 435.173 \\
 		&  &  &  &  &  &  & \\
-		\parbox[t]{2mm}{\multirow{3}{*}{\rotatebox[origin=c]{90}{Total}}} & Not net. 1 & 1652.464 & 1291.571 & 1116.922 & 1621.971 & 1321.591 & 1148.385 \\
-		& Not net. 2 & 6646.296 & 1736.134 & 1560.921 & 5661.706 & 1792.703 & 1583.558 \\
+		\parbox[t]{2mm}{\multirow{3}{*}{\rotatebox[origin=c]{90}{Total}}} & Not net. 1 & 1286,466 & 1143,162 & 976,950 & 1369,459 & 1172,111 & 1007,756 \\
+		& Not net. 2 & 1652.464 & 1291.571 & 1116.922 & 1621.971 & 1321.591 & 1148.385 \\
 		& \textbf{Overall} & \textbf{12839.566} & \textbf{1764.088} & \textbf{1565.100} & \textbf{9520.385} & \textbf{1803.489} & \textbf{1587.814} \\
 		\hline
 	\end{tabular}
@@ -116,47 +116,122 @@ In Tables \ref{tab:perf_time_size_and_jobs}, ..., are given detailed execution t
 	\footnotesize
 	\center 
 	\begin{tabular}{|c|c|c|c|c|c|c|c|}
-		\hline
-		\parbox[t]{2mm}{\multirow{8}{*}{\rotatebox[origin=c]{90}{Run information}}} & Run nb. & 1 & 2 & 3 & 4 & 5 & 6 \\
-		\cline{2-8}		
-		& Image & 716528 & 728725 & 728725 & 728725 & 8120444 & 8120444\\
-		& Width & 163840 & 131072 & 131072 & 131072 & 172032 & 172032\\
-		& Height & 95744 & 57856 & 57856 & 57856 & 104704 & 104704\\
-		& Tile width & 512 & 1024 & 1024 & 512 & 1024 & 1024\\
-		& Tile height & 512 & 1024 & 1024 & 512 & 1024 & 1024\\
-		& Tiles & 61750 & 7353 & 7353 & 29900 & 17510 & 17510\\
-		& Jobs & 16 & 16 & 16 & 16 & 100 & 100\\
-		& RAM {\tiny(Go)} & 32 & 32 & 32 & 100 & 1000 & 1000\\
-		&  &  &  &  &  &  & \\ 
-		\parbox[t]{2mm}{\multirow{5}{*}{\rotatebox[origin=c]{90}{Polygons}}} & Found & 49442 & 8385 & 8385 & 9998 & 201974 & 202853\\
-		& Merged & 42573 & 7164 & 7164 & 7330 & 183782 & 183992\\
-		& Cell & 81 & 149 & 2468 & 2755 & / & 109510\\
-		& Pattern & 2384 & 833 & 1077 & 1393 & / & 28960\\
-		& Dispatched & 2465 & 982 & 3545 & 4148 & 174389 & 138470\\
-		&  &  &  &  &  &  & \\
-		\parbox[t]{2mm}{\multirow{4}{*}{\rotatebox[origin=c]{90}{LSL}}} & Loading & 129001.7494 & 53514.2437 & 53710.7671 & 20688.7785 & 247867.2302 & 247462.9641\\
-		& Segment & 9485.1414 & 4743.8858 & 4719.1849 & 6713.7414 & 10068.0100 & 9896.3807\\
-		& Location & 4209.0709 & 1971.8888 & 1961.1859 & 2738.4343 & 4458.5427 & 4471.3817\\
-		& \textbf{Overall} & \textbf{9158.3703} & \textbf{3829.1936} & \textbf{3835.3665} & \textbf{1930.2026} & \textbf{2686.0573} & 2724.0464\\
-		&  &  &  &  &  &  &  \\
-		& Merging & 91.0140 & 57.6108 & 57.7504 & 36.0167 & 2052.1225 & 1972.3464\\
-		&  &  &  &  &  &  &  \\
-		\parbox[t]{2mm}{\multirow{6}{*}{\rotatebox[origin=c]{90}{Dispatching}}} & Model & ET-FL (r.) & ET-FL & ET-FL & ET-FL & ET-FL & ET-DIC\\
-		& Fetch 1 & 313.2474 & 146.9693 & 102.1281 & 234.7505 & 19962.1771 & 8697.8838\\
-		& Cells  & 288.3571 & 92.5044 & 493.3059 & 607.5096 & 56615.5098 & 381.4897\\
-		& Fetch 2 & 1.2727 & 0.4469 & 0.6815 & 1.0183 & 124.6983 & 153.0141\\
-		& Patterns & 279.2642 & 73.3186 & 156.8081 & 153.6380 & 348.1110 & 155.1389\\
-		& \textbf{Overall} & \textbf{883.0553} & \textbf{313.4013} & \textbf{753.0886} & \textbf{997.1051} & \textbf{81731.1864} & \textbf{9391.5655}\\
-		&  &  &  &  &  &  &  \\
-		\parbox[t]{2mm}{\multirow{5}{*}{\rotatebox[origin=c]{90}{Classification}}} & Fetch 3 & 0.5211 & 0.2369 & 0.6788 & 1.0994 & 124.6983 & 20.2389\\
-		& Cells & 1.0911 & 1.1579 & 10.7008 & 12.6491 & 277.9153 & 235.6081\\
-		& Fetch 4 & 0.9426 & 0.4519 & 0.4557 & 1.0570 & 348.1110 & 145.5594\\
-		& Patterns & 13.2939 & 6.3793 & 7.2864 & 10.1172 & 37.3042 & 50.3971\\
-		& \textbf{Overall} & \textbf{15.8702} & \textbf{8.2355} & \textbf{19.1502} & \textbf{24.9634} & \textbf{811.8941} & \textbf{452.8960}\\
-		&  &  &  &  &  &  &  \\
-		& Upload & 5661.45 & 290.23 & 2431.7649 & 345.5561 & 28151.8883 & 8588.6074 \\
-		\hline
+	\hline
+	 \parbox[t]{2mm}{\multirow{9}{*}{\rotatebox[origin=c]{90}{Run information}}} & Run nb. & 7 & 8 & 10 \\
+	 & Image & 728744 & 716528 & 728725 \\
+	 & Width & 172032 & 163840 & 131072 \\
+	 & Height & 104704 & 95744 & 57856 \\
+	 & Tile width & 1024 & 1024 & 1024 \\
+	 & Tile height & 1024 & 1024 & 1024 \\
+	 & Tiles & 17510 & 15390 & 7353 \\
+	 & Jobs & 32 & 32 & 32 \\
+	 & RAM (Go) & 79.45 & 73.13 & 66.38 \\
+	 &  &  &  &  \\
+	 \parbox[t]{2mm}{\multirow{5}{*}{\rotatebox[origin=c]{90}{Polygons}}} & Found & 57266 & 45617 & 8418 \\
+	 & Merged & 54098 & 42294 & 7195 \\
+	 & Cell & 42782 & 33042 & 5703 \\
+	 & Pattern & 6274 & 6351 & 1079 \\
+	 & Dispatched & 49056 & 39393 & 6782 \\
+	 &  &  &  &  \\
+	 \parbox[t]{2mm}{\multirow{4}{*}{\rotatebox[origin=c]{90}{LSL}}} & Loading & 1521.482 & 1395.434 & 968.262 \\
+	 & Segment & 16492.846 & 13601.847 & 6378.335 \\
+	 & Location & 5582.815 & 4963.792 & 2406.242 \\
+	 & \textbf{Overall} & \textbf{757.256} & \textbf{670.970} & \textbf{351.508} \\
+	 &  &  &  &  \\
+	 & Merging & 102.940 & 183.515 & 40.991 \\
+	 &  &  &  &  \\
+	 \parbox[t]{2mm}{\multirow{6}{*}{\rotatebox[origin=c]{90}{Dispatching}}} & Model & ET-DIC & ET-DIC & ET-DIC \\
+	 & Fetch 1 & 2498.633 & 1189.211 & 12.092 \\
+	 & Cells & 139.267 & 119.410 & 25.621 \\
+	 & Fetch 2 & 1.813 & 1.434 & 0.570 \\
+	 & Patterns & 21.725 & 21.999 & 6.882 \\
+	 & \textbf{Overall} & \textbf{881.252} & \textbf{1332.723} & \textbf{45.320} \\
+	 &  &  &  &  \\
+	 \parbox[t]{2mm}{\multirow{7}{*}{\rotatebox[origin=c]{90}{Classification}}} & Model & ET-DIC & ET-DIC & ET-DIC \\
+	 & Fetch 3 & 9.052 & 5.620 & 1.389 \\
+	 & Cells & 104.618 & 86.905 & 15.706 \\
+	 & Model & ET-DIC & ET-DIC & ET-DIC \\
+	 & Fetch 4 & 1.804 & 1.352 & 0.469 \\
+	 & Patterns & 16.929 & 19.138 & 6.058 \\
+	 & \textbf{Overall} & \textbf{132.793} & \textbf{113.265} & \textbf{23.678} \\
+	 &  &  &  &  \\
+	 \parbox[t]{2mm}{\multirow{2}{*}{\rotatebox[origin=c]{90}{Net.}}} & Caching & 29349.127 & 33666.674 & 16.729 \\
+	 & Uploading & 3105.667 & 16592.120 & 450.024 \\
+	 &  &  &  &  \\
+	 \parbox[t]{2mm}{\multirow{3}{*}{\rotatebox[origin=c]{90}{Total}}} & Not net. 1 & 1145.342 & 1103.856 & 447.475 \\
+	 & Not net. 2 & 3656.644 & 2301.474 & 461.995 \\
+	 & \textbf{Overall} & \textbf{36111.438} & \textbf{52560.267} & \textbf{928.747} \\
+	\hline
 	\end{tabular}
-	\caption{Cytomine server}
-	\label{tab:execution_times}
+	\caption{Typical executions of the workflow (slide processing only). Execution times are given in seconds.}
+	\label{tab:perf_time_typical}
+\end{table}
+
+
+More details about the fields of Table \ref{tab:workflow_exec_pattern_incl} are given hereafter
+
+\begin{enumerate}
+	\item \textbf{Run information}: same as for Tables \ref{tab:perf_time_size_and_jobs} and \ref{tab:perf_time_typical}
+	\item \textbf{Slide proc.}: information about execution of the first phase, i.e. slide processing
+	\begin{itemize}
+		\item \textit{Poly.}: number of polygons found and dispatched by the phase
+		\item \textit{LSL}: total execution time for the \textit{Load/Segment/Locate} phase
+		\item \textit{Merging}: total execution time for the merging phase
+		\item \textit{Dispatch}: total execution time for the dispatch phase
+		\item \textit{Classify}: total execution time for the classify phase
+		\item \textit{Total}: total duration of the slide processing phase 
+	\end{itemize}
+	\item \textbf{Pattern proc.}: information about execution of the second phase, i.e. patterns processing
+	\begin{itemize}
+		\item \textit{Patterns}: number of patterns found by the previous phase and processed by this one
+		\item \textit{Poly.}: number of polygons (i.e. cells) found and dispatched by the phase
+		\item \textit{LSL}: total execution time for all the executed \textit{LSL} phases. In addition is given the average \textit{LSL} execution time and standard deviation for one pattern. 
+		\item \textit{Merging}: total execution time for all the executed merging phases (+ average time and standard deviation for one pattern)
+		\item \textit{Dispatch}: total execution time for all the executed dispatching phases (+ average time and standard deviation for one pattern)
+		\item \textit{Classify}: total execution time  for all the executed classification phases (+ average time and standard deviation for one pattern)
+		\item \textit{Total}: total execution time for the phase (+ average time and standard deviation for one pattern)
+	\end{itemize}	 
+	\item \textbf{Net.}: same as for Tables \ref{tab:perf_time_size_and_jobs} and \ref{tab:perf_time_typical}. \textit{Upload 1} refers to the upload of results from the slide processing and \textit{Upload 2} to that of the patterns processing.
+	\item \textbf{Total}: same as for Tables \ref{tab:perf_time_size_and_jobs} and \ref{tab:perf_time_typical}. Note that in this case, \textit{No net. 1} also includes network time for fetching crops of the cells detected by the patterns processing.
+\end{enumerate}
+\begin{table}
+	\footnotesize
+	\center
+	\begin{tabular}{|c|c|cc|cc|}
+	\hline
+	 \parbox[t]{2mm}{\multirow{9}{*}{\rotatebox[origin=c]{90}{Run information}}} & Run nb. & \multicolumn{2}{c|}{11} & \multicolumn{2}{|c|}{12} \\
+	 & Image & \multicolumn{2}{c|}{716528} & \multicolumn{2}{|c|}{728725} \\
+	 & Width & \multicolumn{2}{c|}{163840} & \multicolumn{2}{|c|}{131072} \\
+	 & Height & \multicolumn{2}{c|}{95744} & \multicolumn{2}{|c|}{57856} \\
+	 & Tile width & \multicolumn{2}{c|}{1024} & \multicolumn{2}{|c|}{1024} \\
+	 & Tile height & \multicolumn{2}{c|}{1024} & \multicolumn{2}{|c|}{1024} \\
+	 & Tiles & \multicolumn{2}{c|}{15390} & \multicolumn{2}{|c|}{7353} \\
+	 & Jobs & \multicolumn{2}{c|}{50} & \multicolumn{2}{|c|}{64} \\
+	 & RAM (Go) & \multicolumn{2}{c|}{138.66} & \multicolumn{2}{|c|}{178.47} \\
+	 &  &  &  &  & \\
+	 \parbox[t]{2mm}{\multirow{6}{*}{\rotatebox[origin=c]{90}{Slide proc.}}} & Poly. & \multicolumn{2}{c|}{39430} & \multicolumn{2}{|c|}{6777} \\
+	 & LSL & \multicolumn{2}{c|}{732.967} & \multicolumn{2}{|c|}{271.944} \\
+	 & Merging & \multicolumn{2}{c|}{208.819} & \multicolumn{2}{|c|}{47.122} \\
+	 & Dispatch & \multicolumn{2}{c|}{193.681} & \multicolumn{2}{|c|}{41.614} \\
+	 & Classify & \multicolumn{2}{c|}{134.661} & \multicolumn{2}{|c|}{40.890} \\
+	 & \textbf{Total} & \multicolumn{2}{c|}{\textbf{1271.042}} & \multicolumn{2}{|c|}{\textbf{404.742}} \\
+	 &  &  &  &  & \\
+	 \parbox[t]{2mm}{\multirow{7}{*}{\rotatebox[origin=c]{90}{Pattern proc.}}} & Patterns & \multicolumn{2}{c|}{6323} & \multicolumn{2}{|c|}{1080} \\
+	 & Poly. & \multicolumn{2}{c|}{39633} & \multicolumn{2}{|c|}{13269} \\
+	 & LSL & 9500.147 & {\tiny1.50 $\pm$ 0.34} & 2420.109 & {\tiny2.241 $\pm$ 1.135} \\
+	 & Merging & 225.594 & {\tiny0.035 $\pm$1.04} & 113.494 & {\tiny0.105 $\pm$ 0.934} \\
+	 & Dispatch & 7.734 & {\tiny0.00124 $\pm$ 0.00267} & 1.196 &  {\tiny0.00122 $\pm$ 0.00191}\\
+	 & Classify & 7523.256 & {\tiny1.44 $\pm$ 1.2316} & 1757.388 & {\tiny2.180 $\pm$ 2.443} \\
+	 & \textbf{Total} & \textbf{17319.615} & {\tiny\textbf{2.678 $\pm$ 1.305}} & \textbf{4307.111} & {\tiny\textbf{3.934 $\pm$ 3.293}} \\
+	 &  &  &  &  & \\
+	 \parbox[t]{2mm}{\multirow{3}{*}{\rotatebox[origin=c]{90}{Net.}}} & Caching & \multicolumn{2}{c|}{47.876} & \multicolumn{2}{|c|}{3.358}\\
+	 & Upload 1 & \multicolumn{2}{c|}{20399.008} & \multicolumn{2}{|c|}{450.024} \\
+	 & Upload 2 & \multicolumn{2}{c|}{2762.877} & \multicolumn{2}{|c|}{1138.706} \\
+	 &  &  &  &  & \\
+	 \parbox[t]{2mm}{\multirow{2}{*}{\rotatebox[origin=c]{90}{Tot.}}} & No net. 1 & \multicolumn{2}{c|}{18551.736} & \multicolumn{2}{|c|}{4703.322} \\
+	 & \textbf{Overall} & \multicolumn{2}{c|}{\textbf{41761.498}} & \multicolumn{2}{|c|}{\textbf{6295.409}} \\
+	\hline
+	\end{tabular}
+	\caption{Typical executions of the workflow (including pattern processing). Execution times are given in seconds.}
+	\label{tab:workflow_exec_pattern_incl}
 \end{table}
