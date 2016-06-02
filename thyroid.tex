@@ -5,7 +5,14 @@ An introduction to the thyroid problem as well as the underlying implementation 
 
 \section{Problem and underlying challenges}
 \label{sec:thyroid_impl_issue}
-The problem consists in finding cells with inclusion and proliferative architectural patterns in large digitized microscope slides. To perform this detection, a dataset containing approximately 6000 annotations was created by experts on the Cytomine platform (see Section \ref{sssec:detection_thyroid_dataset}). The major challenges involved with this problem are detailed hereafter. 
+The problem consists in finding cells with inclusion and proliferative architectural patterns in large digitized microscope whole-slides (see Figure \ref{fig:whole_slide_illus}). To perform this detection, a dataset containing approximately 6000 annotations was created by experts on the Cytomine platform (see Section \ref{sssec:detection_thyroid_dataset}). The major challenges involved with this problem are detailed hereafter. 
+
+\begin{figure}
+	\center
+	\includegraphics[scale=0.2]{image/whole-slide-dim.png}
+	\caption{Digitized microscope whole-slide dimensions (dim. in pixels: $163840 \times 95744$).}
+	\label{fig:whole_slide_illus}
+\end{figure}
 
 \paragraph{Image quality} While the image resolution is more than acceptable, the images themselves are by nature not very well suited for object extraction. Indeed, the objects of interests are surrounded with a lot of other undesirable objects. Moreover, due to the imprecise nature of the staining performed before digitization, some staining variations can appear across slides or within a slide. 
 
@@ -920,8 +927,6 @@ As far as classification is concerned, approximately 11 \% and 15 \% of all dete
 	\caption{Typical appearance of classified cells (with probabilities).}
 	\label{fig:classif_typical}
 \end{figure}
-
-\subsection{Classification}
 
 \section{Improvements and future works}
 
