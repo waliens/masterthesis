@@ -1,0 +1,31 @@
+\begin{center}
+ 
+	{\sf \large \textbf{A workflow for large-scale computer-aided cytology and its applications}.}\\
+\raggedleft
+ 	{\sf \textit{by Romain Mormont} }\\
+\centering
+	{\sf \textit{Supervisor}: Dr. Raphaël Marée, \textit{Academic}: Prof. Pierre Geurts }\\
+\centering
+	{\sf Academic year 2015-2016 }\
+
+\end{center}
+\hfill
+
+In several fields of application, multi-gigapixel images must be analysed to gather information and take decision. This analysis is often performed manually, which is a tedious task given the volume of data to process. For instance, in cytology, branch of medical sciences which focuses on study of cells, cytopathologists analyse cell samples microscope slides in order to diagnose diseases such as cancers. Typically, malignancy is assessed by the presence or absence of cells with given characteristics. In geology, climate variations can be analysed by studying the concentration 
+of micro-organisms in core samples. The concentration is usually evaluated by smearing the samples onto microscope glass slides and counting those micro-organisms. \\
+
+In those situations, computer sciences and, especially, machine learning and image processing provide a great alternative to a pure-human approach as they can be used to extract relevant information automatically. Especially, those kind of problems can be expressed as object detection and classification problems.
+\\
+
+This thesis presents the elaboration and assessment of a generic framework, \textit{SLDC}, for object detection and classification in multi-gigapixel images. Especially, this framework provides implementers with a concise way of formulating problem dependent-components of their algorithm (i.e. segmentation and classification) while it takes care of problem-independent concerns such as parallelization and large image handling. 
+\\
+
+The performances of the framework are then assessed on a real-world problem, thyroid nodule malignancy. Especially, a workflow is built to detect malignant cells in thyroid cell samples whole-slides.
+\\
+
+Results are promising: the effective processing time for an image containing 8 gigapixels is less than 10 minutes. In order, to further reduce this execution time, some improvements are proposed.
+\\
+
+The framework implementation can be found on GitHub: \url{https://github.com/waliens/sldc}.
+
+\hfill
