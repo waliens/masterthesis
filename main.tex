@@ -77,27 +77,29 @@
 	\input{frontpage.tex}
 	% End frontpage ===========================
 	
-	\newpage
-	
-	% Start table of content ==================
+	\newpage 
 	\clearpage
-	\setcounter{page}{1}
-	\tableofcontents
-	% End table of content ====================
+	\pagenumbering{gobble}
 	
-	\newpage
-
 	% Start summary ===========================
 	\section*{Abstract}
 	\input{summary.tex}
 	\newpage
 	% End summary =============================
-	
+		
 	% Start acknowledgement ===================
-	\chapter*{Acknowledgement}
+	\section*{Acknowledgement}
 	\input{acknowledgement.tex}
 	\newpage
 	% End acknowledgement =====================
+	
+	% Start table of content ==================
+	\tableofcontents
+	% End table of content ====================
+	
+	\newpage
+	\clearpage
+	\pagenumbering{arabic}
 	
 	% Start introduction ======================
 	\chapter{Introduction}
