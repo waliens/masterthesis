@@ -55,7 +55,7 @@
 
 \begin{document}
 \setbeamertemplate{caption}{\raggedright\insertcaption\par}
-\renewcommand{\inserttotalframenumber}{28}
+\renewcommand{\inserttotalframenumber}{17}
 
 % Title page ==================================================================
 
@@ -68,65 +68,8 @@
 \end{center}
 \end{frame}
 
-\begin{frame}
-  \frametitle{Outline}
-  %\tableofcontents
-  \setbeamertemplate{enumerate items}[circle]
-  \begin{enumerate}
-  \item Context
 
-  \vspace{0.5cm}
-
-  \item Applications\\
-    {\scriptsize Cytology, geology.}
-
-  \vspace{0.5cm}
-  
-  \item Objectives
-
-  \vspace{0.5cm}
-
-  \item SLDC framework\\
-    {\scriptsize Algorithm, implementation and toy example}
-	
-  \vspace{0.5cm}
-
-  \item SLDC at work: thyroid nodule malignancy
-
-  \vspace{0.5cm}
-
-  \item Conclusion 
-  \end{enumerate}
-\end{frame}
-
-
-% Motivation =================================================================
-
-
-\begin{frame}{Context}
-	\begin{itemize}
-		\item More and more \textbf{multi-gigapixels images} are used to gather information and take decision
-		\item Information is typically embedded into an image as a set of \textbf{objects of interest}
-		\item Pure human-analysis is tedious due to the large amount of data to process
-		\item Computer programs could be used to assist experts in the analysis
-		\item Especially, this assistance would be provided by algorithms of \textbf{object detection and classification} 
-		\item Main aims: increased efficiency and accuracy
-	\end{itemize}
-\end{frame}
-
-
-\begin{frame}{Application: cytology}
-	\begin{itemize}
-		\item Nodules are growths of cells that forms lumps within the thyroid 
-		\item Only 7\% of the nodules are malignant
-		\item \textbf{Aim}: diagnosing malignancy of thyroid nodules
-		\item \textbf{How}: detecting cells with inclusions and proliferative architectural patterns in cell samples
-	\end{itemize}
-
-\end{frame}
-
-
-\begin{frame}{Application: cytology}
+\begin{frame}{Context and application}
 	\vfill
 	\begin{figure}[h]
 	\center
@@ -152,7 +95,7 @@
 \end{frame}
 
 
-\begin{frame}{Application: cytology}
+\begin{frame}{Application: thyroid nodule malignancy}
 	\begin{figure}
 		\center
 		\subfigure[Proliferative]{
@@ -172,32 +115,10 @@
 \end{frame}
 
 
-\begin{frame}{Application: geology}
-	\begin{itemize}
-		\item \textbf{Aim}: assess the effects of climate variations by analysing core samples
-		\item \textbf{How}: evaluate concentrations of micro-organisms present in the core samples
-		\item Core samples are smeared onto microscope glass slides and \textbf{micro-organisms are manually counted by geologists}
-	\end{itemize}
-	\begin{figure}
-		\includegraphics[scale=0.35]{images/diatomee-1.jpg}
-		\hspace{1cm}
-		\includegraphics[scale=0.35]{images/diatomee-2.jpg}
-		\caption{Example of micro-organisms (diatoms)}	
-	\end{figure}
-\end{frame}
-
-\begin{frame}{Application: geology}
-	\begin{figure}
-		\includegraphics[scale=0.8]{images/whole-slide-geo-2.png}
-		\caption{Microscope slide with smeared core samples.}
-	\end{figure}
-\end{frame}
-
-
-\begin{frame}{Applications}
+\begin{frame}{Application: thyroid nodule malignancy}
 	\begin{center}
 		\Large
-		Both applications can be expressed as problems of \textbf{object detection and classification} !
+		Can be expressed as a problem of \textbf{object detection and classification} !
 	\end{center}	
 \end{frame}
 
@@ -213,14 +134,12 @@
 
 
 \begin{frame}{SLDC framework}
-	\textbf{Design goals}:
+	\textbf{Technical challenges}:
 	\begin{itemize}
-		\item Genericity
-		\item Efficiency
 		\item Memory constraint (images do not fit into memory)
-		\item Robustness
+		\item Efficiency
 		\item Parallelism
-		\item Ease of use and conciseness
+		\item Genericity
 	\end{itemize}
 \end{frame}
 
@@ -231,12 +150,6 @@
 	\end{figure}
 \end{frame}
 
-
-\begin{frame}{SLDC framework: algorithms (chaining)}
-	\begin{figure}
-		\includegraphics[scale=0.25]{images/chaining_illustration.png}
-	\end{figure}
-\end{frame}
 
 \begin{frame}{SLDC framework: implementation}
 	Key features:
@@ -256,112 +169,16 @@
 	\end{itemize}
 \end{frame}
 
-\begin{frame}{SLDC framework: toy example}
-	The aim is to detect \textbf{shape and color} of the objects in the following image:
-	\vfill
-	\begin{figure}
-		\includegraphics[scale=0.03]{images/toy_example.png}
-	\end{figure}
-	\vfill
-\end{frame}
-
-
-\begin{frame}[fragile]{SLDC framework: toy example}
-\begin{minted}[fontsize=\scriptsize]{python}
-# Defining a dispatching rule 
-class CircleRule(DispatchingRule):
-    """A rule which matches circle polygons"""
-    def evaluate_batch(self, image, polygons):
-        return [circularity(p) > 0.85 for p in polygons]
-
-# Defining a segmenter
-class CustomSegementer(Segmenter):
-    """Every non black pixel are in an object of interest"""
-    def segment(self, image):
-        return (image > 0).astype(np.uint8)
-        
-# Defining a polygon classifier
-class ColorClassifier(PolygonClassifier):
-    """A classifier which returns the color class of the center 
-    point of the polygon
-    """
-    def predict_batch(self, image, polygons):
-        classes = [center_pxl_color(image, p) for p in polygons]
-        probas = [1.0] * len(polygons)
-        return classes, probas
-\end{minted}
-\end{frame}
-
-
-\begin{frame}[fragile]{SLDC framework: toy example}
-\begin{minted}[fontsize=\scriptsize]{python}
-# Build the workflow
-builder = WorkflowBuilder()
-builder.set_n_jobs(4)
-builder.set_segmenter(CustomSegementer())
-builder.add_classifier(CircleRule(), ColorClassifier(), disp_label="circle")
-builder.add_classifier(SquareRule(), ColorClassifier(), disp_label="square")
-workflow = builder.get()
-
-# Process an image
-results = workflow.process(image)
-
-# Go through the detected objects
-for polygon, dispatch, label, proba in results:
-  print "Detected polygon {}".format(polygon)
-  print "Dispatched by '{}'".format(dispatch)
-  print "Predicted class {}".format(label)
-  print "Probability {}".format(proba)
-  print ""
-\end{minted}
-\end{frame}
-
-
-\begin{frame}[fragile]{SLDC framework: toy example}
-\begin{minted}[fontsize=\scriptsize]{text}
-Detected polygon POLYGON ((...))
-Dispatched by 'square'
-Predicted class 1
-Probability 1.0
-
-Detected polygon POLYGON ((...))
-Dispatched by 'circle'
-Predicted class 0
-Probability 1.0
-
-Detected polygon POLYGON ((...))
-Dispatched by 'square'
-Predicted class 1
-Probability 1.0
-
-Detected polygon POLYGON ((...))
-Dispatched by 'circle'
-Predicted class 1
-Probability 1.0
-
-Detected polygon POLYGON ((...))
-Dispatched by 'square'
-Predicted class 0
-Probability 1.0
-\end{minted}
-\end{frame}
-
 
 \begin{frame}{SLDC at work}
-	\begin{itemize}
-		\item \textbf{Reminder}: the aim is to detect cells with inclusion and proliferative architectural patterns in digitized slides smeared with cell samples
-		\item The solution is based on a workflow developed in an earlier master thesis
-		\item Some components of this workflow were reused as-is: 
-		\begin{itemize}
-			\item Slide segmentation
-			\item Pattern segmentation
-		\end{itemize}
-		\item Some components were replaced or updated: 
-		\begin{itemize}
-			\item Dispatching updated
-			\item Classification models
-		\end{itemize}
-	\end{itemize}
+	\begin{center}	
+		Aim: detect \textbf{cells with inclusion} and \textbf{proliferative architectural patterns}
+	\end{center}
+	\begin{figure}
+		\includegraphics[scale=0.55]{images/prolif_pattern_1.png}
+		\hspace{1cm}
+		\includegraphics[scale=0.35]{images/incl1.png}
+	\end{figure}
 \end{frame}
 
 
@@ -379,72 +196,59 @@ Probability 1.0
 \end{frame}
 
 
-\begin{frame}{SLDC at work: qualitative results}
+\begin{frame}{SLDC at work: execution times}
 	\begin{itemize}
-		\item \textbf{Slide segmentation} sometimes fails at detecting some objects but works relatively well in general
+		\item Execution times mostly dominated by network communication
+		\item Effective time for 16 giga-pixels images is 18 minutes
+		\item \textbf{Effective time for 8 giga-pixels images is 8 minutes}
 	\end{itemize}
 	
 	\begin{figure}
-		\includegraphics[scale=0.25]{images/success_pattern_1_nopat.png}
-		\hspace{0.25cm}
-		\includegraphics[scale=0.25]{images/success_pattern_1_pat.png} \\
-		\vspace{0.1cm}
-		\includegraphics[scale=0.25]{images/success_pattern_2_nopat.png}
-		\hspace{0.25cm}
-		\includegraphics[scale=0.25]{images/success_pattern_2_pat.png}
+		\subfigure[Acceleration brought by using more processes.]{\includegraphics[scale=0.35]{images/perf_lsl_parallelization.png}}
+		\hspace{0.5cm}
+		\subfigure[Scalability of the LSL phase.]{\includegraphics[scale=0.35]{images/perf_lsl_sec_gp.png}}
 	\end{figure}
 \end{frame}
 
 
-\begin{frame}{SLDC at work: qualitative results}
-	\begin{itemize}
-		\item \textbf{Pattern segmentation} works well if patterns are "\textit{clean}" on some images. Otherwise, it usually fails at detecting cells (especially cells with inclusion).
-	\end{itemize}
-	
+\begin{frame}{SLDC at work: detection}
 	\begin{figure}
+		\includegraphics[scale=0.3]{images/success_pattern_1_nopat.png}
+		\hspace{0.25cm}
+		\includegraphics[scale=0.3]{images/success_pattern_1_pat.png}\\
+		\vspace{0.25cm}
 		\includegraphics[scale=0.25]{images/success_reseg_2_pat.png}
-		\hspace{0.25cm}
-		\includegraphics[scale=0.25]{images/success_reseg_2_nopat.png} \\
-		\includegraphics[scale=0.25]{images/failure_reseg_noreason_1_pat.png}
-		\hspace{0.25cm}
-		\includegraphics[scale=0.25]{images/failure_reseg_noreason_1_nopat.png}
+		\hspace{1cm}
+		\includegraphics[scale=0.25]{images/success_reseg_2_nopat.png}
 	\end{figure}
-\end{frame}
-
-
-\begin{frame}{SLDC at work: qualitative results}
-	\begin{itemize}
-		\item The \textbf{dispatching classifier} works well as it misclassifies few objects
-		\item The \textbf{pattern} and \textbf{cell classifiers} generate too many false positives and require much work
-	\end{itemize}
 \end{frame}
 
 \begin{frame}{Conclusions}
-	\begin{itemize}
-		\item Results are promising in term of execution times: effective \textbf{processing time} of a 8 gigapixels image is approximately \textbf{8 minutes}.
-		\item The \textbf{workflow developed for the thyroid problem} still fails at detecting some objects of interest and produces false positives so it \textbf{still requires some improvements}.
-		\item The \textbf{framework is production-ready} and can be found on GitHub
-	\end{itemize}
+	\begin{enumerate}
+		\item The \textbf{framework is production-ready} and available on GitHub.
+		\vspace{1cm}
+		\item The implemented workflow provides \textbf{promising results} but \textbf{still requires some improvements}.
+	\end{enumerate}
 \end{frame}
 
 \begin{frame}{Future works}
 
 	\begin{block}{SLDC framework}
 		\begin{itemize}
-			\item Implement another structure for dispatching
-			\item Improve memory consumption of the workflow
-			\item Fix location algorithm
+			\item Was \textbf{improved since the master thesis submission} (parallelization, ease of use,...).
+			\item But some minor improvements must still be performed.
 		\end{itemize}
 	\end{block}
+	
 		
 	\begin{block}{Thyroid workflow}
 		\begin{itemize}
-			\item Improve or replace both segmentation procedures
-			\item Improve the classification models, especially the \textit{inclusion vs. normal}
+			\item Improving the segmentation procedures
+			\item Improving the classification models
 		\end{itemize}
 	\end{block}
-		
 \end{frame}
+
 \begin{frame}
 	\vfill
 	\begin{center}
