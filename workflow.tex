@@ -58,7 +58,8 @@ Let $\mathcal{T}$ be the \textbf{classifier} operator. It is applied to an objec
 \begin{equation}
 	\mathcal{T}(\cdot) : O \rightarrow L \mid o \mapsto C
 \end{equation}
-where $O$ is the set of all possible objects ($o \in O$) and $L$, the set of all possible classification labels ($C \in L$). 
+where $O$ is the set of all possible object representations ($o \in O$) and $L$, the set of all possible classification labels ($C \in L$). As a polygon is a representation of an object, we have $H \subset O$. 
+
 \end{definition}
 \begin{definition}
 Let $\mathcal{T}^*$ be an extension of $\mathcal{T}$ which is given a set of objects and produces labels for all of them. Formally: 
@@ -70,13 +71,13 @@ Let $\mathcal{T}^*$ be an extension of $\mathcal{T}$ which is given a set of obj
 \subsection{Single segmentation, single classifier}
 \label{ssec:single_single}
 
-The most simple construction of $\mathcal{W}$ would be the composition of the operators defined in Section \ref{ssec:other_operators}. Particularly, the compositions $\mathcal{S} \circ \mathcal{L}$ and $\mathcal{S} \circ \mathcal{L} \circ \mathcal{T}^*$ would respectively produce the polygons representing the objects and their labels. This construction is summarized in Algorithm \ref{algo:single_seg_single_classif}: 
+The most simple construction of $\mathcal{W}$ would be the composition of the operators defined in Section \ref{ssec:other_operators}. Particularly, the compositions $\mathcal{L} \circ \mathcal{S}$ and $\mathcal{T}^* \circ \mathcal{L} \circ \mathcal{S}$ would respectively produce the polygons representing the objects and their labels. This construction is summarized in Algorithm \ref{algo:single_seg_single_classif}: 
 
 \begin{algorithm} \label{algo:single_seg_single_classif} 
 	Construction of $\mathcal{W}$ using one segmentation and one classifier:
 	
 	\begin{enumerate}
-		\item Return $\left\langle\left(\mathcal{S} \circ \mathcal{L}\right)\left(\mathcal{I}\right) , \left(\mathcal{S} \circ \mathcal{L} \circ \mathcal{T}^*\right)\left(\mathcal{I}\right)\right\rangle$
+		\item Return $\left\langle\left(\mathcal{L} \circ \mathcal{S}\right)\left(\mathcal{I}\right) , \left(\mathcal{T}^* \circ \mathcal{L} \circ \mathcal{S}\right)\left(\mathcal{I}\right)\right\rangle$
 	\end{enumerate}
 \end{algorithm}
 
@@ -124,7 +125,7 @@ Before extending the algorithm for handling this case, it is worth noting that A
 \begin{algorithm}\label{algo:single_seg_several_classif}
 Construction of the $\mathcal{W}$ operator with a single segmentation and several classifiers. 
 \begin{enumerate}
-	\item Apply the $\mathcal{S} \circ \mathcal{L}$ composition to the input image $\mathcal{I}$ to extract the objects of interest as the set of polygons $S_p \leftarrow \left\{P_1, ..., P_N \right\}$
+	\item Apply the $\mathcal{L} \circ \mathcal{S}$ composition to the input image $\mathcal{I}$ to extract the objects of interest as the set of polygons $S_p \leftarrow \left\{P_1, ..., P_N \right\}$
 	\item Initialize the labels set $L \leftarrow \emptyset$
 	\item For each polygon $P \in S_p$:
 	\begin{enumerate}
