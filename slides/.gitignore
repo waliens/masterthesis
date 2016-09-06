@@ -9,5 +9,9 @@
 *.lof
 *.lot
 *.xml
+*.nav
+*.out
+*.snm
+*.vrb
 main.out
-*.dvi
+_minted*/
