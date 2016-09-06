@@ -1,5 +1,7 @@
 \documentclass{beamer}
 
+\usetheme{Warsaw}
+
 \usepackage[utf8]{inputenc}
 \usepackage[english,british]{babel}
 \usepackage{verbatim}
@@ -55,7 +57,7 @@
 
 \begin{document}
 \setbeamertemplate{caption}{\raggedright\insertcaption\par}
-%\renewcommand{\inserttotalframenumber}{17}
+\renewcommand{\inserttotalframenumber}{19}
 
 % Title page ==================================================================
 
@@ -89,21 +91,45 @@
 
 \end{frame}
 
+
 \begin{frame}{Context}
 	\vfill
 	\begin{figure}[h]
 	\center
-	\includegraphics[scale=0.17]{images/whole-slide-dim.png}
-	\caption{Microscope slide smeared with cell samples (15 gigapixels).}
+	\includegraphics[scale=0.19]{images/whole-slide-dim.png}
+	\caption{Microscope slide smeared with thyroid cell samples (15 gigapixels).}
 	\end{figure}
 	\vfill
-	
+\end{frame}
+
+\begin{frame}{Context}
+	\vfill
+	\begin{figure}[h]
+	\center
+	\includegraphics[scale=0.95]{images/whole-slide-geo-2.png}
+	\caption{Microscope slide smeared with core samples (11 gigapixels).}
+	\end{figure}
+	\vfill
+\end{frame}
+
+\begin{frame}{Context}
+	\vfill
+	\begin{figure}[h]
+	\center
+	\includegraphics[scale=0.78]{images/whole-slide-lung-2.png}
+	\caption{Microscope slide smeared with lung cell samples (3 gigapixels).}
+	\end{figure}
+	\vfill
+\end{frame}
+
+\begin{frame}{Context}
 	\begin{itemize}
 		\item Huge slides usually \textbf{analysed manually} !
-		\item Computer programs could be used to assist humans
+		\item Machine learning (ML) and image processing (IP) could be used to assist humans
+		\item Problems of \textbf{object detection and classification}
 	\end{itemize}
-	
 \end{frame}
+
 
 \begin{frame}{SLDC: framework}
 
@@ -127,7 +153,6 @@
 
 \end{frame}
 
-
 \begin{frame}{SLDC: features}
 	\begin{itemize}
 	
@@ -137,13 +162,12 @@
 		
 		\item A \textbf{customizable logging system} providing a rich feedback about the execution
 		
-		\item \textbf{Effortless integration} with other Python libraries: scikit-learn (ML), open-cv (CV), PyCuda (GPU),...
+		\item \textbf{Effortless integration} with other Python libraries: scikit-learn (ML), open-cv (IP), PyCuda (GPU),...
 		
 		\item \textbf{Builder components} providing an easy way of constructing complex workflows
 		
 	\end{itemize}
 \end{frame}
-
 
 \begin{frame}{SLDC: how it works}
 	\begin{figure}
@@ -151,6 +175,137 @@
 	\end{figure}
 \end{frame}
 
+
+\begin{frame}{SLDC at work}
+	\begin{center}	
+		Aim: detect \textbf{cells with inclusion} and \textbf{proliferative architectural patterns}
+	\end{center}
+	\begin{figure}
+		\includegraphics[scale=0.35]{images/incl1.png}
+		\hspace{1cm}
+		\includegraphics[scale=0.55]{images/prolif_pattern_1.png}
+	\end{figure}
+\end{frame}
+
+\begin{frame}{SLDC at work: Cytomine}
+	\includegraphics[scale=0.09]{images/cytomine_typo.png} is a web-based environment enabling collaborative multi-gigapixel images analysis. {\footnotesize(Marée \& al., Bioinformatics; 2016)}\\
+	\vspace*{0.01in}
+	\hspace*{-1.5in}\includegraphics[scale=0.24]{images/cytomine.png}
+\end{frame}
+
+\begin{frame}{SLDC at work: data}
+	\begin{itemize}
+		\item \textbf{84 images} with size ranging from 4 to 18 gigapixels
+		\item \textbf{68 annotated images} 
+		\item \textbf{5921 labelled annotations} made by cytopathologists\footnote[frame]{Team of Pr. Isabelle Salmon, Department of Pathology, Faculty of Medecine, ULB}
+	\end{itemize}
+
+	\begin{figure}
+		\center
+		\subfigure[Annot. per term]{\includegraphics[scale=0.35]{images/counts_all.png}}
+		\subfigure[Annot. per group]{\includegraphics[scale=0.35]{images/counts_all_grouped.png}}
+	\end{figure}
+\end{frame}
+
+\begin{frame}{SLDC at work: data}
+	\begin{figure}
+		\center
+		\subfigure[Pattern annot. per term]{\includegraphics[scale=0.32]{images/counts_patterns.png}}
+		\subfigure[Pattern annot. per group]{\includegraphics[scale=0.32]{images/counts_patterns_grouped.png}}\\
+		\subfigure[Cell annot. per term]{\includegraphics[scale=0.32]{images/counts_cells.png}}
+		\subfigure[Cell annot. per group]{\includegraphics[scale=0.32]{images/counts_cells_grouped.png}}\\
+	\end{figure}
+\end{frame}
+
+\begin{frame}{SLDC at work: workflow}
+	\begin{figure}
+		\includegraphics[scale=0.35]{images/thyroid_workflow_1.png}
+	\end{figure}
+\end{frame}
+
+\begin{frame}{SLDC at work: workflow (cont'd)}
+	\begin{figure}
+		\includegraphics[scale=0.4]{images/thyroid_workflow_2.png}
+	\end{figure}
+\end{frame}
+
+\begin{frame}{SLDC at work: workflow (cont'd)}
+
+	Classification is performed based on the detected object's crop image using \textbf{random subwindows and extremely randomized trees}\footnote[frame]{Marée et al., Pattern Recognition Letters ; 2016}.
+	
+	\vfill
+	
+	\begin{columns}
+		\footnotesize
+		\begin{column}{0.492\linewidth}
+			
+			\textbf{Cell with inclusion vs. normal cells}: 
+			
+			\vspace{0.4cm}
+			
+			\begin{tabular}{rc}
+			  Accuracy:  & 0.8523 \\
+			  Precision: & 0.6310 \\
+			  Recall:    & \textcolor{red}{0.4930} \\
+			\end{tabular}
+			
+			\vspace{0.4cm}
+			
+			\begin{tabular}{c|ccc}
+				& Normal & Inclusion \\
+				\hline
+				Normal & 881 & 62 \\
+				Inclusion & 109 & 106 \\
+			\end{tabular}
+
+		\end{column}
+		
+		\begin{column}{0.49\linewidth}
+		
+			\textbf{Proliferative vs. normal patterns}:
+			 
+			\vspace{0.4cm}
+
+			\begin{tabular}{rc}
+			  Accuracy:  & 0.8625 \\
+			  Precision: & 0.8363 \\
+			  Recall:    & 0.9493 \\
+			\end{tabular}
+			
+			\vspace{0.4cm}
+			
+			\begin{tabular}{c|ccc}
+				& Normal & Prolif. \\
+				\hline
+				Normal & 158 & 55 \\
+				Prolif. & 15 & 281 \\
+			\end{tabular}
+			
+		\end{column}
+
+	\end{columns}
+	
+\end{frame}
+
+\begin{frame}{SLDC at work: results }
+\end{frame}
+\begin{frame}{Future works}
+
+???
+
+\end{frame}
+
+
+\begin{frame}
+	\vfill
+	\begin{center}
+		Thank you for your attention ! \\
+		Any question ?
+	\end{center}
+	\vfill
+\end{frame}
+
+%% Bonus slides
 
 \begin{frame}{SLDC: toy example}
 	The aim is to detect circles in the following image. As a bonus, we want to know their center color.
@@ -160,7 +315,6 @@
 	\end{figure}
 	\vfill
 \end{frame}
-
 
 \begin{frame}[fragile]{SLDC: toy example (cont'd)}
 \begin{minted}[fontsize=\scriptsize]{python}
@@ -189,7 +343,6 @@ class ColorClassifier(PolygonClassifier):
 \end{minted}
 \end{frame}
 
-
 \begin{frame}[fragile]{SLDC: toy example (cont'd)}
 \begin{minted}[fontsize=\scriptsize]{python}
 # Build the workflow
@@ -212,8 +365,7 @@ for polygon, dispatch, label, proba in results:
 \end{minted}
 \end{frame}
 
-
-\begin{frame}[fragile]{SLDC: toy example  (cont'd)}
+\begin{frame}[fragile]{SLDC: toy example (cont'd)}
 \begin{minted}[fontsize=\scriptsize]{text}
 Detected polygon POLYGON ((...))
 Dispatched by 'circle'
@@ -225,61 +377,6 @@ Dispatched by 'circle'
 Predicted class 255
 Probability 1.0
 \end{minted}
-\end{frame}
-
-
-\begin{frame}{SLDC at work}
-	\begin{center}	
-		Aim: detect \textbf{cells with inclusion} and \textbf{proliferative architectural patterns}
-	\end{center}
-	\begin{figure}
-		\includegraphics[scale=0.55]{images/prolif_pattern_1.png}
-		\hspace{1cm}
-		\includegraphics[scale=0.35]{images/incl1.png}
-	\end{figure}
-\end{frame}
-
-
-\begin{frame}{SLDC at work: Cytomine}
-	TODO
-\end{frame}
-
-\begin{frame}{SLDC at work: thyroid nodule malignancy diagnosis}
-	TODO
-\end{frame}
-
-\begin{frame}{SLDC at work: workflow}
-	\begin{figure}
-		\includegraphics[scale=0.35]{images/thyroid_workflow_1.png}
-	\end{figure}
-\end{frame}
-
-
-\begin{frame}{SLDC at work: workflow (cont'd)}
-	\begin{figure}
-		\includegraphics[scale=0.4]{images/thyroid_workflow_2.png}
-	\end{figure}
-\end{frame}
-
-\begin{frame}{SLDC at work: results}
-	TODO
-\end{frame}
-
-
-\begin{frame}{Future works}
-
-???
-
-\end{frame}
-
-
-\begin{frame}
-	\vfill
-	\begin{center}
-		Thank you for your attention ! \\
-		Any question ?
-	\end{center}
-	\vfill
 \end{frame}
 
 \end{document}
