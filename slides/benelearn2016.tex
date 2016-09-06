@@ -1,0 +1,285 @@
+\documentclass{beamer}
+
+\usepackage[utf8]{inputenc}
+\usepackage[english,british]{babel}
+\usepackage{verbatim}
+\usepackage{graphicx}
+\usepackage{color}
+\usepackage{hyperref}
+\usepackage{verbatim}
+\usepackage{url}
+\usepackage{moreverb}
+\usepackage{fancyvrb}
+\usepackage{minted}
+\usepackage{algpseudocode}
+\usepackage{natbib}
+\usepackage{eulervm}
+\usepackage{auto-pst-pdf}
+\usepackage{pst-plot}
+\usepackage{multirow}
+\usepackage{subfigure}
+
+
+\hypersetup{colorlinks=true, linkcolor=black, urlcolor=blue}
+\usetheme{boxes}
+\beamertemplatenavigationsymbolsempty
+\setbeamertemplate{sections/subsections in toc}[circle]
+\setbeamertemplate{footline}[frame number]
+\setbeamertemplate{itemize items}[circle]
+\setbeamertemplate{itemize subitem}[square]
+
+\title{{\bf SLDC: an open-source workflow for object detection in multi-gigapixel images}}
+\author{Romain Mormont, Jean-Michel Begon, Renaud Hoyoux, Raphaël Marée}
+\institute{Montefiore Institute, University of Liège, Belgium}
+\date{\today}
+
+\newcommand{\todo}[1]{\textcolor{red}{[TODO] #1}}
+
+\definecolor{lightgreen}{rgb}{0.0,0.8,0.0}
+\definecolor{lightblue}{rgb}{0.3,0.8,1.0}
+\definecolor{lightred}{rgb}{0.874,0.180,0.105}
+\definecolor{gray}{rgb}{0.4,0.4,0.4}
+\definecolor{lightgray}{rgb}{0.8,0.8,0.8}
+\definecolor{shadecolor}{rgb}{0.9,0.9,0.9}
+\newrgbcolor{mygreen}{.00 .5 .00}
+\newrgbcolor{myyellow}{.6 .6 .00}
+
+\DeclareMathOperator*{\argmax}{arg\,max}
+
+
+\newrgbcolor{mygreen}{.00 .5 .00}
+\newcommand{\X}[1]{\textcolor{blue}{#1}}
+\newcommand{\y}[1]{\textcolor{red}{#1}}
+\newcommand{\model}[1]{\textcolor{mygreen}{#1}}
+\newcommand{\loss}[1]{\textcolor{lightblue}{#1}}
+
+\begin{document}
+\setbeamertemplate{caption}{\raggedright\insertcaption\par}
+%\renewcommand{\inserttotalframenumber}{17}
+
+% Title page ==================================================================
+
+\begin{frame}
+\titlepage
+\end{frame}
+
+\begin{frame}{Outline}
+
+	\begin{enumerate}
+
+		\item Context
+		
+		\item SLDC
+		\begin{itemize}
+			\item Framework
+			\item How it works
+			\item Features
+			\item Toy example		
+		\end{itemize}
+
+		\item SLDC at work: thyroid nodule malignancy
+		\begin{itemize}
+			\item Cytomine
+			\item Thyroid nodule malignancy diagnosis
+			\item Workflow
+			\item Results
+		\end{itemize}
+		
+	\end{enumerate}
+
+\end{frame}
+
+\begin{frame}{Context}
+	\vfill
+	\begin{figure}[h]
+	\center
+	\includegraphics[scale=0.17]{images/whole-slide-dim.png}
+	\caption{Microscope slide smeared with cell samples (15 gigapixels).}
+	\end{figure}
+	\vfill
+	
+	\begin{itemize}
+		\item Huge slides usually \textbf{analysed manually} !
+		\item Computer programs could be used to assist humans
+	\end{itemize}
+	
+\end{frame}
+
+\begin{frame}{SLDC: framework}
+
+	\textit{SLDC} is an \textbf{open-source Python framework} created for accelerating development of large image analysis workflows. 
+	
+	\vfill
+
+	\textbf{How ?}
+	\begin{itemize}
+
+		\item It encapsulates problem-independent logic (parallelism, memory limitation due to large images handling,…)
+
+		\item It provides a concise way of declaring problem dependant components (segmentation, object classification,…)
+
+	\end{itemize}
+	
+	\vfill
+	
+	\textbf{Where ?}
+	On GitHub at {\small\url{https://github.com/waliens/sldc}}
+
+\end{frame}
+
+
+\begin{frame}{SLDC: features}
+	\begin{itemize}
+	
+		\item \textbf{Tile-based processing} to avoid loading a full image into memory
+		
+		\item Several level of \textbf{parallelism}: tiles, objects, images,...
+		
+		\item A \textbf{customizable logging system} providing a rich feedback about the execution
+		
+		\item \textbf{Effortless integration} with other Python libraries: scikit-learn (ML), open-cv (CV), PyCuda (GPU),...
+		
+		\item \textbf{Builder components} providing an easy way of constructing complex workflows
+		
+	\end{itemize}
+\end{frame}
+
+
+\begin{frame}{SLDC: how it works}
+	\begin{figure}
+		\includegraphics[scale=0.45]{images/workflow_illustration.png}
+	\end{figure}
+\end{frame}
+
+
+\begin{frame}{SLDC: toy example}
+	The aim is to detect circles in the following image. As a bonus, we want to know their center color.
+	\vfill
+	\begin{figure}
+		\includegraphics[scale=0.04]{images/toy_example.png}
+	\end{figure}
+	\vfill
+\end{frame}
+
+
+\begin{frame}[fragile]{SLDC: toy example (cont'd)}
+\begin{minted}[fontsize=\scriptsize]{python}
+# Defining a segmenter
+class CustomSegementer(Segmenter):
+    """All non-black pixels are in an object of interest"""
+    def segment(self, image):
+        return (image > 0).astype(np.uint8)
+        
+# Defining a dispatching rule 
+class CircleRule(DispatchingRule):
+    """A rule which matches circle polygons"""
+    def evaluate_batch(self, image, polygons):
+        return [circularity(p) > 0.85 for p in polygons]
+
+# Defining a polygon classifier
+class ColorClassifier(PolygonClassifier):
+    """
+    A classifier which returns the color (greyscale) 
+    of the center pixel of the object
+    """
+    def predict_batch(self, image, polygons):
+        classes = [center_pxl_color(image, p) for p in polygons]
+        probas = [1.0] * len(polygons)
+        return classes, probas
+\end{minted}
+\end{frame}
+
+
+\begin{frame}[fragile]{SLDC: toy example (cont'd)}
+\begin{minted}[fontsize=\scriptsize]{python}
+# Build the workflow
+builder = WorkflowBuilder()
+builder.set_n_jobs(100)
+builder.set_segmenter(CustomSegementer())
+builder.add_classifier(CircleRule(), ColorClassifier(), disp_label="circle")
+workflow = builder.get()
+
+# Process an image
+results = workflow.process(image)
+
+# Go through the detected objects
+for polygon, dispatch, label, proba in results:
+  print "Detected polygon {}".format(polygon)
+  print "Dispatched by '{}'".format(dispatch)
+  print "Predicted class {}".format(label)
+  print "Probability {}".format(proba)
+  print ""
+\end{minted}
+\end{frame}
+
+
+\begin{frame}[fragile]{SLDC: toy example  (cont'd)}
+\begin{minted}[fontsize=\scriptsize]{text}
+Detected polygon POLYGON ((...))
+Dispatched by 'circle'
+Predicted class 128
+Probability 1.0
+
+Detected polygon POLYGON ((...))
+Dispatched by 'circle'
+Predicted class 255
+Probability 1.0
+\end{minted}
+\end{frame}
+
+
+\begin{frame}{SLDC at work}
+	\begin{center}	
+		Aim: detect \textbf{cells with inclusion} and \textbf{proliferative architectural patterns}
+	\end{center}
+	\begin{figure}
+		\includegraphics[scale=0.55]{images/prolif_pattern_1.png}
+		\hspace{1cm}
+		\includegraphics[scale=0.35]{images/incl1.png}
+	\end{figure}
+\end{frame}
+
+
+\begin{frame}{SLDC at work: Cytomine}
+	TODO
+\end{frame}
+
+\begin{frame}{SLDC at work: thyroid nodule malignancy diagnosis}
+	TODO
+\end{frame}
+
+\begin{frame}{SLDC at work: workflow}
+	\begin{figure}
+		\includegraphics[scale=0.35]{images/thyroid_workflow_1.png}
+	\end{figure}
+\end{frame}
+
+
+\begin{frame}{SLDC at work: workflow (cont'd)}
+	\begin{figure}
+		\includegraphics[scale=0.4]{images/thyroid_workflow_2.png}
+	\end{figure}
+\end{frame}
+
+\begin{frame}{SLDC at work: results}
+	TODO
+\end{frame}
+
+
+\begin{frame}{Future works}
+
+???
+
+\end{frame}
+
+
+\begin{frame}
+	\vfill
+	\begin{center}
+		Thank you for your attention ! \\
+		Any question ?
+	\end{center}
+	\vfill
+\end{frame}
+
+\end{document}
