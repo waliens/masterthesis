@@ -1,6 +1,6 @@
 \documentclass{beamer}
 
-\usetheme{Warsaw}
+%\usetheme{Boxes}
 
 \usepackage[utf8]{inputenc}
 \usepackage[english,british]{babel}
@@ -57,7 +57,7 @@
 
 \begin{document}
 \setbeamertemplate{caption}{\raggedright\insertcaption\par}
-\renewcommand{\inserttotalframenumber}{19}
+\renewcommand{\inserttotalframenumber}{20}
 
 % Title page ==================================================================
 
@@ -74,18 +74,20 @@
 		\item SLDC
 		\begin{itemize}
 			\item Framework
-			\item How it works
 			\item Features
-			\item Toy example		
+			\item How it works
 		\end{itemize}
 
 		\item SLDC at work: thyroid nodule malignancy
 		\begin{itemize}
+			\item Thyroid case
 			\item Cytomine
-			\item Thyroid nodule malignancy diagnosis
+			\item Data
 			\item Workflow
 			\item Results
 		\end{itemize}
+		
+		\item Conclusion and future works
 		
 	\end{enumerate}
 
@@ -145,11 +147,6 @@
 		\item It provides a concise way of declaring problem dependant components (segmentation, object classification,…)
 
 	\end{itemize}
-	
-	\vfill
-	
-	\textbf{Where ?}
-	On GitHub at {\small\url{https://github.com/waliens/sldc}}
 
 \end{frame}
 
@@ -176,7 +173,7 @@
 \end{frame}
 
 
-\begin{frame}{SLDC at work}
+\begin{frame}{SLDC at work: thyroid case}
 	\begin{center}	
 		Aim: detect \textbf{cells with inclusion} and \textbf{proliferative architectural patterns}
 	\end{center}
@@ -188,7 +185,7 @@
 \end{frame}
 
 \begin{frame}{SLDC at work: Cytomine}
-	\includegraphics[scale=0.09]{images/cytomine_typo.png} is a web-based environment enabling collaborative multi-gigapixel images analysis. {\footnotesize(Marée \& al., Bioinformatics; 2016)}\\
+	\includegraphics[scale=0.09]{images/cytomine_typo.png} is a web-based environment enabling collaborative multi-gigapixel image analysis.  \footnotesize{(Website: \url{www.cytomine.be}. Marée \& al., Bioinformatics; 2016)}.\\
 	\vspace*{0.01in}
 	\hspace*{-1.5in}\includegraphics[scale=0.24]{images/cytomine.png}
 \end{frame}
@@ -202,18 +199,29 @@
 
 	\begin{figure}
 		\center
-		\subfigure[Annot. per term]{\includegraphics[scale=0.35]{images/counts_all.png}}
 		\subfigure[Annot. per group]{\includegraphics[scale=0.35]{images/counts_all_grouped.png}}
+		\subfigure[Annot. per term]{\includegraphics[scale=0.35]{images/counts_all.png}}
 	\end{figure}
 \end{frame}
 
-\begin{frame}{SLDC at work: data}
+\begin{frame}{SLDC at work: data (cont'd)}
 	\begin{figure}
 		\center
-		\subfigure[Pattern annot. per term]{\includegraphics[scale=0.32]{images/counts_patterns.png}}
-		\subfigure[Pattern annot. per group]{\includegraphics[scale=0.32]{images/counts_patterns_grouped.png}}\\
-		\subfigure[Cell annot. per term]{\includegraphics[scale=0.32]{images/counts_cells.png}}
-		\subfigure[Cell annot. per group]{\includegraphics[scale=0.32]{images/counts_cells_grouped.png}}\\
+		\subfigure[Pattern annot. per group]{\includegraphics[scale=0.32]{images/counts_patterns_grouped.png}}
+		\subfigure[Pattern annot. per term]{\includegraphics[scale=0.32]{images/counts_patterns.png}}\\
+		\subfigure[Proliferative (malignant)]{\includegraphics[scale=0.1]{images/all_prolif.png}}
+		\hspace*{.5cm}
+		\subfigure[Normal patterns (benign)]{\includegraphics[scale=0.1]{images/all_norm_patterns.png}}
+	\end{figure}
+\end{frame}
+
+\begin{frame}{SLDC at work: data (cont'd)}
+	\begin{figure}
+		\subfigure[Cell annot. per group]{\includegraphics[scale=0.32]{images/counts_cells_grouped.png}}
+		\subfigure[Cell annot. per term]{\includegraphics[scale=0.32]{images/counts_cells.png}}\\
+		\subfigure[Cells with incl. (malignant)]{\includegraphics[scale=0.1]{images/all_incl.png}}
+		\hspace*{.5cm}
+		\subfigure[Normal cells (benign)]{\includegraphics[scale=0.1]{images/all_norm_cells.png}}
 	\end{figure}
 \end{frame}
 
@@ -289,46 +297,44 @@
 
 \begin{frame}{SLDC at work: results}
 	\footnotesize
+	\vspace*{-0.2cm}
 	\begin{columns}
 		\begin{column}{0.40\linewidth}
 			\begin{figure}
 				\center
-				\vspace*{-1cm}
-				\includegraphics[scale=0.25]{images/728725.png}
+				\includegraphics[scale=0.2]{images/728725.png}
+				\caption{Size: 131072 $\times$ 57856}
 			\end{figure}
 		\end{column}
 		\begin{column}{0.47\linewidth}
 			\begin{tabular}{rl}
-				Size: & 131072 $\times$ 57856\\ 
-				& \\
 				Objects found: & \textbf{20046} \\
 				Cells found: & 18966 \\
 				Patterns found: & 1080 \\
 				& \\
 				Time (1st pass): & \textbf{7 min 30 sec} \\
 				Time (2nd pass): & 1 h 10 min  \\
+				Peak memory: & 138 Go \\
 			\end{tabular}
 		\end{column}
 	\end{columns}
-	
 	\begin{columns}
 		\begin{column}{0.40\linewidth}
 			\begin{figure}
 				\center
-				\includegraphics[scale=0.20]{images/716528.png}
+				\includegraphics[scale=0.16]{images/716528.png}
+				\caption{Size: 163840 $\times$ 95744}
 			\end{figure}
 		\end{column}
-		\vspace*{0.5cm}
 		\begin{column}{0.47\linewidth}
 		\begin{tabular}{rl}
-				Size: & 163840 $\times$ 95744 \\
-				& \\
 				Objects found: & \textbf{79063} \\
 				Cells found: & 72740 \\
 				Patterns found: & 6323 \\
 				& \\
 				Time (1st pass): & \textbf{18 min 20 sec} \\
 				Time (2nd pass): & 4 h 50 min  \\
+				Peak memory: & 178 Go \\
 			\end{tabular}
 		\end{column}
 	\end{columns}
@@ -336,9 +342,25 @@
 \end{frame}
 
 
-\begin{frame}{Future works}
+\begin{frame}{Conclusion and future works}
 
-???
+	\begin{enumerate}
+		\item Framework
+
+		\begin{itemize}
+			\item Production-ready !
+			\item Open-source and generic.
+			\item Still some minor improvements to make (parallelization, dispatching,...)
+			\item \textbf{Feel free to use it}: {\small\url{https://github.com/waliens/sldc}}
+		\end{itemize}
+		
+		\item Thyroid workflow:
+		
+		\begin{itemize}
+			\item At this point, too many false positives.
+			\item Need to improve the classifiers and the segmentation procedures
+		\end{itemize}			
+	\end{enumerate}
 
 \end{frame}
 
