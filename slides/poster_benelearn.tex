@@ -30,7 +30,7 @@
 \setbeamercolor{block alerted body}{fg=black,bg=dblue!10}%body color
 
 % Titre, date, auteurs
-\title{SLDC: an open-source workflow for object detection in multi-gigapixels images}
+\title{SLDC: an open-source workflow for object detection in multi-gigapixel images}
 \author{Romain Mormont, Jean-Michel Begon, Renaud Hoyoux, Raphaël Marée\\
 {\tt r.mormont@student.ulg.ac.be, jm.begon@ulg.ac.be, renaud.hoyoux@ulg.ac.be, raphael.maree@ulg.ac.be}}
 \institute{Systems and modeling, Department of EE \& CS, University of Liège, Belgium}
@@ -50,19 +50,19 @@
 
 \begin{block}{Object detection and classification}	
 \begin{itemize}
-\item In some fields of applications, \textbf{multi-gigapixel images} must analysed to gather information and take decision.
-\item The analysis usually consist in \textbf{finding some objects} in the images and to associate them with a field-related labels.
-\item In cytology, cytopathologists analyze microscope slides in order to find malignant cells or artefacts to \textbf{diagnose diseases like cancer} (see Figure below).
+\item In some applications, \textbf{multi-gigapixel images} must analysed to gather information and/or take decisions.
+\item The analysis usually consists in \textbf{finding some objects} in the images and to associate them with a field-related label.
+\item In cytology, cytopathologists analyse microscope slides in order to find malignant cells or artefacts to \textbf{diagnose diseases like cancer} (see Figure below).
 \end{itemize}
 
 \begin{figure}[H]
 \center
 \includegraphics[scale=0.6]{images/whole-slide-dim.png}
-\caption{To the left, a microscope slide smeared with thyroid cell samples (15 gigapixels). To the right, an object of interest: a proliferative architectural pattern.}
+\caption{Left: a digitized high-resolution image of a microscope slide smeared with thyroid cell samples (15 gigapixels). Right: an object of interest: a proliferative architectural pattern.}
 \end{figure}
 
 \begin{itemize}
-\item Thanks to modern technologies, microscope slides are often digitized to be further analysed on computers. But \textbf{slides are huge}: $\sim$ 100K $\times$ 100K pixels typically  ($\sim 10^{10}$ pixel$^2$)
+\item Thanks to modern technologies, microscope slides are often digitized to be further analysed on computers. But \textbf{slides are huge}: $\sim$ 100K $\times$ 100K pixels typically  
 \item Due to the lack of proper tool, those slides are \textbf{usually analysed manually} ! 
 \item \textbf{Machine learning and image processing} could provide a great alternative to a pure-human approach.
 \end{itemize}		
@@ -74,10 +74,10 @@ $\Rightarrow$ Those problems can be expressed as problems of \textbf{object dete
 
 \end{block}
 
-~~
+~
 
 \begin{block} {SLDC framework}
-\textit{SLDC} is an \textbf{open-source Python framework} created for accelerating development of large image analysis workflows which can be expressed as problems of object detection and classification.
+\textit{SLDC} is an \textbf{open-source Python framework} created for accelerating development of large image analysis workflows.
 
 ~
 
@@ -89,23 +89,19 @@ $\Rightarrow$ Those problems can be expressed as problems of \textbf{object dete
 \item It provides a \textbf{concise way of declaring problem dependant components} (segmentation, object classification,…)
 
 \end{itemize}
-
-~~
-
+~
 \begin{alertblock}{Features}
 \begin{itemize}
-\item \textbf{Tile-based}: images are splitted into tiles which are loaded one after another into memory. A full image is never loaded into memory at once.
-\item \textbf{Parallel}: available at several levels (tiles, objects, images,...).
-\item \textbf{Talkative}: a customizable logging system provides a real-time rich feedback about the execution.
+\item \textbf{Tile-based}: images are splitted into tiles which are loaded into memory one after another. A full image is never loaded into memory at once.
+\item \textbf{Parallel}: the framework can take advantage of parallelism to reduce its execution time. Parallelism is available at several levels (tiles, objects, images,...).
+\item \textbf{Talkative}: a customizable logging system provides a rich real-time feedback about the execution.
 \item \textbf{Integrable}: thanks to Python, integration with other libraries such as scikit-learn (ML), open-cv (IP), PyCuda (GPU),... is effortless.
 \item \textbf{Convenient}: builder components provide an easy way of constructing complex workflows.
 \end{itemize}
 \end{alertblock}
 
-~~ 
-
 \begin{alertblock}{How SLDC works}
-Given an input image, the framework produces a set of polygons and classification labels representing the objects and their labels. In order to do so, it executes the following steps: 
+Given an input image, the framework produces a set of polygons and classification labels representing the objects of interest. In order to do so, it executes the following steps: 
 
 ~
 
@@ -113,7 +109,7 @@ Given an input image, the framework produces a set of polygons and classificatio
 \item \textbf{S}egment $\mathcal{S}$: a segmentation procedure is applied on the input image (top-left) and produces a binary mask (top-right) locating the objects of interest in the image.
 \item \textbf{L}ocate $\mathcal{L}$: polygons representing the objects found in the image are extracted from the binary mask.
 \item \textbf{D}ispatch $\mathcal{D}$: polygons are dispatched to their most appropriate classifier using some dispatching rules $r$. 
-\item \textbf{C}lassify $\mathcal{T}_i$: a classifier produces a classification for the polygons/objects it is passed.
+\item \textbf{C}lassify $\mathcal{T}_i$: a classifier produces classification labels for the polygons/objects it is passed.
 \end{itemize}
 
 ~
@@ -144,7 +140,7 @@ To diagnose thyroid cancer, cytopathologists screen microscope slides smeared wi
 
 \begin{exampleblock}{Data}
 
-The dataset is stored on the Cytomine \cite{maree2016collaborative} web platform. In consists in:
+The dataset is stored on the Cytomine \cite{maree2016collaborative} web platform. It consists in:
 
 \begin{itemize}
 	\item \textbf{84 images} with size ranging from 4 to 18 gigapixels
@@ -169,7 +165,7 @@ The dataset is stored on the Cytomine \cite{maree2016collaborative} web platform
 \end{exampleblock}
 
 \begin{exampleblock}{Workflow}
-Two passes are performed on the images. The first consists in extracting standalone cells and architectural patterns. The second consists in extract cells which are contained in the detected patterns. 
+To actually detect those objects, two passes are performed on the images. The first consists in extracting standalone cells and architectural patterns. The second consists in extracting the cells contained in the detected patterns. 
 
 \begin{figure}
 	\center
@@ -180,7 +176,7 @@ Two passes are performed on the images. The first consists in extracting standal
 \end{exampleblock}
 
 \begin{exampleblock}{Classification}
-Classification is performed based on the detected object's crop image using \textbf{random subwindows and extremely randomized trees} \cite{Maree201617}.
+Classification is performed based on the detected objects' crop images using \textbf{random subwindows and extremely randomized trees} \cite{Maree201617}.
 \end{exampleblock}
 
 \begin{exampleblock}{Results}
@@ -192,16 +188,16 @@ Classification is performed based on the detected object's crop image using \tex
 				\includegraphics[scale=0.6]{images/728725.png}
 			\end{figure}
 			
-			\begin{tabular}{rl}			
-				& \\			
-				Size: & 131072 $\times$ 57856\\	
-				Objects found: & \textbf{20046} \\
-				Cells found: & 18966 \\
-				Patterns found: & 1080 \\
+			\begin{tabular}{rl}
 				& \\
-				Time (1st pass): & \textbf{7 min 30 sec} \\
-				Time (2nd pass): & 1 h 10 min  \\
-				Peak memory: & 138 Go \\
+				Size: & 163840 $\times$ 95744\\
+				Time (1st pass): & \textbf{12 min 24 sec} \\
+				Time (2nd pass): & \textbf{7 min 10 sec}  \\
+				Objects found: & \textbf{76133} \\
+				Cells found: & 69820 \\
+				Patterns found: & 6313 \\
+				Jobs: & 64 \\
+				Max memory usage: & 179.855 Go \\
 			\end{tabular}
 		\end{column}
 
@@ -213,14 +209,14 @@ Classification is performed based on the detected object's crop image using \tex
 			
 			\begin{tabular}{rl}
 				& \\
-				Size: & 163840 $\times$ 95744 \\
-				Objects found: & \textbf{79063} \\
-				Cells found: & 72740 \\
-				Patterns found: & 6323 \\
-				& \\
-				Time (1st pass): & \textbf{18 min 20 sec} \\
-				Time (2nd pass): & 4 h 50 min  \\
-				Peak memory: & 178 Go \\
+				Size: & 131072 $\times$ 57856\\
+				Time (1st pass): & \textbf{4 min 38 sec} \\
+				Time (2nd pass): & \textbf{2 min 04 sec}  \\
+				Objects found: & \textbf{18882} \\
+				Cells found: & 17802 \\
+				Patterns found: & 1080 \\
+				Jobs: & 64 \\
+				Max memory usage: & 159.414 Go \\
 			\end{tabular}
 		\end{column}
 	\end{columns}
@@ -229,7 +225,7 @@ Classification is performed based on the detected object's crop image using \tex
 
 \begin{alertblock}{Conclusion}
 \begin{enumerate}
-	\item The framework is production ready, feel free to use it! 
+	\item The \textbf{SLDC framework is production ready}, feel free to use it: { \url{https://github.com/waliens/sldc}}
 	\item The thyroid workflow can still be improved (classifiers and segmentations)
 \end{enumerate}
 \end{alertblock}
