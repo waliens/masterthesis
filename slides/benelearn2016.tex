@@ -74,8 +74,8 @@
 		\item SLDC
 		\begin{itemize}
 			\item Framework
-			\item Features
 			\item How it works
+			\item Features
 		\end{itemize}
 
 		\item SLDC at work: thyroid nodule malignancy
@@ -150,6 +150,14 @@
 
 \end{frame}
 
+
+\begin{frame}{SLDC: how it works}
+	\begin{figure}
+		\includegraphics[scale=0.45]{images/workflow_illustration.png}
+	\end{figure}
+\end{frame}
+
+
 \begin{frame}{SLDC: features}
 	\begin{itemize}
 	
@@ -161,15 +169,8 @@
 		
 		\item \textbf{Effortless integration} with other Python libraries: scikit-learn (ML), open-cv (IP), PyCuda (GPU),...
 		
-		\item \textbf{Builder components} providing an easy way of constructing complex workflows
 		
 	\end{itemize}
-\end{frame}
-
-\begin{frame}{SLDC: how it works}
-	\begin{figure}
-		\includegraphics[scale=0.45]{images/workflow_illustration.png}
-	\end{figure}
 \end{frame}
 
 
@@ -316,7 +317,7 @@
 				Patterns found: & 1080 \\
 				& \\
 				Jobs: & 64 \\
-				Max memory usage: & 179.855 Go \\
+				Max memory usage: & 159.414 Go \\
 			\end{tabular}
 		\end{column}
 	\end{columns}
@@ -330,15 +331,15 @@
 		\end{column}
 		\begin{column}{0.47\linewidth}
 		\begin{tabular}{rl}
+				Time (1st pass): & \textbf{12 min 24 sec} \\
+				Time (2nd pass): & \textbf{7 min 10 sec}  \\
+				& \\
 				Objects found: & \textbf{76133} \\
 				Cells found: & 69820 \\
 				Patterns found: & 6313 \\
 				& \\
-				Time (1st pass): & \textbf{12 min 24 sec} \\
-				Time (2nd pass): & \textbf{7 min 10 sec}  \\
-				& \\
 				Jobs: & 64 \\
-				Max memory usage: & 159.414 Go \\
+				Max memory usage: & 179.855 Go \\
 			\end{tabular}
 		\end{column}
 	\end{columns}
@@ -450,6 +451,16 @@ Dispatched by 'circle'
 Predicted class 255
 Probability 1.0
 \end{minted}
+\end{frame}
+
+
+\begin{frame}[fragile]{SLDC: scalability}
+\begin{figure}
+	\center
+	\subfigure[Evolution of the execution times when varying the number of available processors]{\includegraphics[scale=0.33]{images/perf_lsl_parallelization.png}}
+	\hspace*{0.5cm}
+	\subfigure[Execution times per giga-pixels.]{\includegraphics[scale=0.33]{images/perf_lsl_sec_gp.png}}
+\end{figure}
 \end{frame}
 
 \end{document}
